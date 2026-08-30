@@ -11,14 +11,19 @@ user can trust.
 
 ## Status
 
-Not built yet — goal planned, milestones defined, engineering not started.
-See `GOALS.md` (G-001) for the full scope and milestone plan, and
-`HANDOVER.md` for architecture/decision notes as they accumulate.
+M1 (foundation & data model) done: app scaffold, database schema,
+email/password auth, and a working cs/en language switcher. No real
+ingredient/product/meal data yet. See `GOALS.md` (G-001) for the full
+milestone plan and `HANDOVER.md` for architecture/decision notes.
 
 ## How to run
 
-Not applicable yet — no code exists. This section will be filled in once
-M1 (foundation scaffold) is built.
+1. `docker compose up -d db`
+2. `npm install`
+3. `npx prisma migrate dev`
+4. `npm run dev` — app at http://localhost:3000
+
+See `HANDOVER.md` for the `ADMIN_EMAIL` admin-bootstrap note and more detail.
 
 ## Stack
 

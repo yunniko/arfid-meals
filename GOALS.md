@@ -103,13 +103,24 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
     over ARFID-appropriate framing.
 
 **Milestones** (filled in by The Company during planning):
-- [ ] M1 — Foundation & data model: Next.js/TS/Prisma/Postgres scaffold
+- [x] M1 — Foundation & data model: Next.js/TS/Prisma/Postgres scaffold
       (Docker), next-auth wired (email+password, Role enum incl. ADMIN),
       next-intl wired (cs/en, cookie-based locale). Core schema: Ingredient,
-      Product (country-scoped), Allergen, Meal, MealComponent (links a meal
-      to ingredients/products with quantities), MealTag, UserProfile,
-      ExclusionRule (group/food/preparation granularity). README/HANDOVER
-      stubs in place.
+      Product (country-scoped), Allergen, FoodGroup, Meal, MealComponent
+      (links a meal to ingredients/products with quantities), MealTypeTag/
+      MealEffortTag, UserProfile, ExclusionRule (group/food/preparation
+      granularity). ✔ 2026-08-30. Verified: full register → auto sign-in →
+      redirect flow driven in a real browser, confirmed the actual Postgres
+      row (email, hashed password, `termsAcceptedAt` set); logout; login
+      with a wrong password (translated error shown) then the correct one
+      (session restored); cookie-driven locale switch confirmed via raw SSR
+      fetch in both `en` and `cs` (Chrome's own auto-translate corrupted
+      on-screen screenshots mid-session, same known issue as when-we-meet's
+      HANDOVER — worked around by verifying via curl/DB instead of
+      screenshots). `tsc --noEmit`, `eslint`, and `next build` all clean.
+      Test user cleaned up from the database afterward. Git initialized,
+      first commit made (secrets/generated Prisma client confirmed
+      gitignored before committing).
 - [ ] M2 — Ingredient + product data import: import pipeline pulling a
       starter set of raw ingredients from USDA FDC (full macro/micronutrient
       detail) and a starter set of Czechia-scoped products from Open Food
@@ -134,9 +145,30 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       flow), README/HANDOVER finalized.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-08-30 — **M1 done and verified.** Scaffolded via `create-next-app`
+  matching listing-studio/when-we-meet's exact Next 16.2.10/React 19.2.4
+  versions, then added Prisma 7 (client output to `src/generated/prisma`,
+  `PrismaPg` adapter), next-auth v5 beta (Credentials provider, JWT
+  sessions, admin-bootstrap-by-email pattern copied from listing-studio),
+  and next-intl (cs/en, cookie-based locale, English-fallback deep-merge —
+  copied from when-we-meet's fixed-locale-list variant rather than
+  listing-studio's env-driven one, since there's no staged-rollout need
+  here, see HANDOVER D7). Local Postgres via `docker compose up -d db`
+  (port 54322, following the registry's per-project-port convention from
+  COMPANY/INFRASTRUCTURE.md, not yet a real deploy). Core schema covers
+  every entity named in the acceptance criteria; full detail in
+  HANDOVER "How things fit together". Built minimal register/login pages
+  and an `/about` stub carrying the safety disclaimer early, so the
+  footer link isn't dead and AC6 has a first real home before M6 expands
+  it into the full ToS. Verified end to end in a real browser (see M1
+  checklist above); full suite is just `tsc`/`eslint`/`next build` at this
+  stage since there's no business logic yet to unit-test — Vitest/
+  Playwright get real specs starting M2 once there's something to test.
+  **Stopping here per OPERATIONS.md milestone checkpoint — awaiting Owner
+  review before starting M2** (USDA FDC + Open Food Facts import
+  pipelines).
 - 2026-08-30 — Goal created and planned with the Owner. Scoping questions
   (data source, MVP market/language, recipe content ownership) resolved via
   AskUserQuestion — see Scope decisions above. Stack decision: followed
   portfolio precedent (TypeScript/Next.js/PostgreSQL/Prisma/next-auth/
   next-intl, per listing-studio/when-we-meet) rather than picking cold.
-  Not started yet — M1 is next.
