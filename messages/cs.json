@@ -10,6 +10,60 @@
   "LocaleSwitcher": {
     "label": "Jazyk"
   },
+  "Nav": {
+    "home": "Domů",
+    "ingredients": "Suroviny",
+    "products": "Produkty"
+  },
+  "Nutrition": {
+    "kcal": "kcal / 100 g",
+    "protein": "Bílkoviny",
+    "fat": "Tuky",
+    "carbs": "Sacharidy",
+    "sugar": "z toho cukry",
+    "fiber": "Vláknina",
+    "sodium": "Sodík",
+    "gluten": "Obsahuje lepek",
+    "lactose": "Obsahuje laktózu",
+    "noGluten": "Bez lepku",
+    "noLactose": "Bez laktózy",
+    "allergensLabel": "Alergeny",
+    "noAllergens": "Nejsou uvedeny žádné alergeny — to nezaručuje, že je položka bez alergenů, viz poznámka níže",
+    "source": "Zdroj",
+    "searchPlaceholder": "Hledat podle názvu...",
+    "searchButton": "Hledat",
+    "noResults": "Žádné výsledky.",
+    "unknown": "není k dispozici",
+    "perHundredGrams": "Hodnoty na 100 g.",
+    "factsHeading": "Nutriční hodnoty"
+  },
+  "Ingredients": {
+    "heading": "Suroviny",
+    "subheading": "Obecné syrové potraviny s podrobnou nutriční hodnotou, zdroj: USDA FoodData Central (volné dílo).",
+    "backLink": "Zpět na suroviny"
+  },
+  "Products": {
+    "heading": "Produkty (Česko)",
+    "subheading": "Značkové produkty dostupné v Česku, zdroj: Open Food Facts.",
+    "attribution": "Data o produktech pocházejí z Open Food Facts, dostupná pod licencí Open Database License (ODbL).",
+    "backLink": "Zpět na produkty"
+  },
+  "Allergens": {
+    "gluten": "Obiloviny obsahující lepek",
+    "crustaceans": "Korýši",
+    "eggs": "Vejce",
+    "fish": "Ryby",
+    "peanuts": "Podzemnice olejná (arašídy)",
+    "soybeans": "Sója",
+    "milk": "Mléko (včetně laktózy)",
+    "nuts": "Skořápkové plody",
+    "celery": "Celer",
+    "mustard": "Hořčice",
+    "sesame-seeds": "Sezamová semena",
+    "sulphur-dioxide-and-sulphites": "Oxid siřičitý a siřičitany",
+    "lupin": "Vlčí bob (lupina)",
+    "molluscs": "Měkkýši"
+  },
   "Home": {
     "heading": "arfid-meals",
     "tagline": "Vyvážená jídla, kterým můžete věřit, sestavená podle toho, co nemůžete jíst — ne jen podle toho, co je zdravé.",

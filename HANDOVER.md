@@ -5,13 +5,15 @@ Read this before touching the project. Goal and milestone plan live in
 
 ## Current state
 
-M1 (foundation & data model) is done and verified — see `GOALS.md` G-001
-for the full record. Working: Next.js app scaffold, Prisma schema + first
-migration, email/password auth (next-auth), cs/en i18n with a working
-language switcher, a minimal home/register/login/about flow. Not built yet:
-any real ingredient/product/meal data (M2-M3), user-facing exclusion-list
-UI (M4), meal generation (M5), and the real Terms & Conditions (M6 — the
-`/about` page is a stub carrying just the safety disclaimer for now).
+M1 and M2 are done and verified — see `GOALS.md` G-001 for the full
+record. Working: Next.js app scaffold, Prisma schema + migration,
+email/password auth, cs/en i18n, and now a real (if starter-sized)
+ingredient/product database — 2,413 USDA-sourced raw ingredients and 493
+Open-Food-Facts-sourced Czech products, both browsable and searchable at
+`/ingredients` and `/products`. Not built yet: recipe/meal admin + seeded
+meals (M3), user-facing exclusion-list UI (M4), meal generation (M5), and
+the real Terms & Conditions (M6 — `/about` is still a stub carrying just
+the safety disclaimer).
 
 ## How to run
 
@@ -24,6 +26,12 @@ UI (M4), meal generation (M5), and the real Terms & Conditions (M6 — the
 `ADMIN_EMAIL` in `.env` (currently blank) is the email that gets promoted
 to `Role.ADMIN` on its first sign-in — set it before registering the
 account that should get admin/recipe-authoring access, per D1 in `src/auth.ts`.
+
+To (re-)populate the ingredient/product database: `npm run import:all`
+(runs the taxonomy seed, then both importers — see D8/D9 below). Both
+importers are idempotent (upsert by `fdcId`/`barcode`), safe to re-run.
+The USDA dataset (~210MB unzipped) is cached in `.data/fdc/` after the
+first run (gitignored — never commit it) so re-imports don't re-download it.
 
 ## Decision record
 
@@ -94,6 +102,56 @@ even though the MVP *market* is Czechia — locale and market are different
 axes; a Czech visitor still gets `cs` via the cookie/switcher, English is
 just the code's fallback baseline.
 
+**D8 — Ingredient starter set: USDA SR Legacy, filtered by category minus
+cooking-method keywords, not a hand-picked list.** SR Legacy (the classic
+"USDA National Nutrient Database for Standard Reference", public domain,
+no API key) has ~7,800 foods across 24 categories, many with several
+cooked/roasted/canned variants per cut. Rather than hand-curate an
+arbitrary list of "common ingredients" (arbitrary, and a lot of manual
+work for uncertain benefit), the importer takes every food in 13 chosen
+"raw ingredient" categories (meats, fish/seafood, dairy+eggs, produce,
+grains, legumes, nuts/seeds, fats/oils, spices) whose description doesn't
+contain a cooking-method word (cooked/roasted/canned/etc.) — this is a
+real, principled, reproducible subset of the actual dataset, not a
+subjective pick, and it naturally keeps the generic "raw/base" form of
+each food (e.g. "Chicken, broilers or fryers, breast, meat only, raw")
+while dropping SR Legacy's many redundant cooked-variant entries. Result:
+2,413 ingredients. Foundation Foods (a newer, smaller, more rigorously
+tested USDA dataset) was considered and rejected for the *starter* set —
+only ~350 foods, too narrow — but is a candidate to layer in later
+alongside SR Legacy without any schema change (`Ingredient.fdcId` already
+supports either source).
+
+**D9 — Allergen data comes from two different places depending on the
+tier, deliberately.** Ingredients (generic, single-food USDA entries) get
+their gluten/lactose/allergen flags from `src/lib/food-heuristics.ts`, a
+name-based keyword match (e.g. "wheat" → gluten, "milk"/"cheese" →
+lactose). This is safe *specifically* because these are single-ingredient
+raw foods where the description names the whole thing — there's no hidden
+additive a name-based check could miss. Products (branded, Open Food
+Facts-sourced) instead use OFF's own crowdsourced `allergens_tags`
+directly, never the heuristic — a branded product can contain hidden
+allergens a name-based guess would never catch, so an authoritative (if
+imperfect, see D10) declared source is the only defensible choice there.
+The 14 EU-regulated allergens (`src/lib/allergens.ts`) are the shared
+vocabulary between both.
+
+**D10 — Two real data-quality issues found in imported data, handled
+differently.** (1) A handful of genuine Open Food Facts entries had
+physically impossible calorie values (1,000–24,000 kcal/100g — likely
+per-serving values mis-entered as per-100g). Fixed at the source: the
+importer now rejects any product with kcal outside [0, 900] (900 ≈ pure
+fat, a real physical ceiling), and the 7 bad rows already imported were
+deleted. (2) Some real, ordinary dairy products (e.g. a "Cottage Cheese"
+entry) have no "en:milk" tag in OFF's `allergens_tags` at all — a genuine
+crowdsourcing gap, not something a smarter query can fix. This is a
+safety-relevant limitation for an ARFID app, so rather than silently
+trusting an empty allergen list, the "no allergens declared" UI copy
+(`Nutrition.noAllergens`) was reworded to explicitly say this does not
+guarantee the item is allergen-free — the existing safety disclaimer
+already covers this class of risk, but the specific empty-list case
+deserved its own explicit caveat rather than reading as reassurance.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -127,18 +185,34 @@ the dropdown, in the root layout so it's on every page). `messages/en.json`
 is the base; `messages/cs.json` is deep-merged on top so partial
 translations never break.
 
+**Data import** (`scripts/`): `seed-taxonomy.ts` must run first (creates
+the Allergen and FoodGroup rows the other two scripts look up by slug and
+fail loudly without). `import-ingredients.ts` downloads/caches USDA SR
+Legacy into `.data/fdc/` then upserts by `fdcId`. `import-products.ts`
+paginates the Open Food Facts search API (rate-limited, see D10) and
+upserts by `barcode`. Both are plain `tsx` scripts run via npm scripts,
+not Next.js API routes — they're one-off/occasional data operations, not
+app runtime behavior. Browse/search (`src/lib/nutrition-queries.ts` →
+`/ingredients`, `/products` and their `[id]` detail pages) is a thin
+read-only layer over the same Prisma models; `src/components/nutrition/*`
+holds the shared nutrition-facts table, allergen badge list, and search
+form used by both tiers' pages.
+
 ## Next steps and open questions
 
-- Next: M2 — USDA FDC + Open Food Facts import pipelines, plus a read-only
-  browse/search UI for both tiers.
+- Next: M3 — recipe/meal admin UI (Owner-only) + a seeded meal database
+  built from the ingredients/products now in place.
 - Open: final product name/domain (currently just the `arfid-meals`
   codename) — not blocking engineering, but needed before any deploy step.
-- Open: exact USDA FDC and Open Food Facts import mechanics (API vs bulk
-  data dump, which subset of each to pull) — to be decided during M2.
 - Open: what "balanced" means precisely for meal generation (M5) — likely
   needs a simple rule set (e.g. target macro ranges per meal-type tag)
   decided closer to M5 rather than guessed now.
-- Note for M2: `Ingredient`/`Product` nutrient fields are all nullable
-  (not every source row reports every nutrient) — the import pipeline
-  should record `null` rather than `0` for genuinely-missing data, since
-  those aren't the same thing for a nutrition app.
+- Open (raised by D10, not resolved): how much should M5's meal generation
+  lean on Product-tier allergen data given it can be incomplete? Worth an
+  explicit decision before M5 rather than an implicit assumption — e.g.
+  should generation prefer Ingredient-tier components (heuristic-derived,
+  but complete-by-construction) over Product-tier ones when a user has any
+  active exclusion rule, purely to reduce reliance on OFF's gaps?
+- Note for later: Foundation Foods (USDA's newer, smaller, more rigorously
+  tested dataset) could be layered in alongside SR Legacy without a schema
+  change if the ingredient set ever needs to grow (see D8).

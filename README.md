@@ -11,17 +11,21 @@ user can trust.
 
 ## Status
 
-M1 (foundation & data model) done: app scaffold, database schema,
-email/password auth, and a working cs/en language switcher. No real
-ingredient/product/meal data yet. See `GOALS.md` (G-001) for the full
-milestone plan and `HANDOVER.md` for architecture/decision notes.
+M1 and M2 done: app scaffold, database schema, email/password auth, cs/en
+i18n, and a real starter ingredient/product database — 2,413 raw
+ingredients (USDA FoodData Central) and 493 Czech market products (Open
+Food Facts), browsable and searchable at `/ingredients` and `/products`.
+No meals/recipes yet. See `GOALS.md` (G-001) for the full milestone plan
+and `HANDOVER.md` for architecture/decision notes.
 
 ## How to run
 
 1. `docker compose up -d db`
 2. `npm install`
 3. `npx prisma migrate dev`
-4. `npm run dev` — app at http://localhost:3000
+4. `npm run import:all` — seeds allergens/food groups and imports the
+   ingredient/product data (takes a few minutes; downloads ~200MB once)
+5. `npm run dev` — app at http://localhost:3000
 
 See `HANDOVER.md` for the `ADMIN_EMAIL` admin-bootstrap note and more detail.
 

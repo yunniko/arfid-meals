@@ -10,6 +10,60 @@
   "LocaleSwitcher": {
     "label": "Language"
   },
+  "Nav": {
+    "home": "Home",
+    "ingredients": "Ingredients",
+    "products": "Products"
+  },
+  "Nutrition": {
+    "kcal": "kcal / 100g",
+    "protein": "Protein",
+    "fat": "Fat",
+    "carbs": "Carbohydrates",
+    "sugar": "of which sugars",
+    "fiber": "Fiber",
+    "sodium": "Sodium",
+    "gluten": "Contains gluten",
+    "lactose": "Contains lactose",
+    "noGluten": "Gluten-free",
+    "noLactose": "Lactose-free",
+    "allergensLabel": "Allergens",
+    "noAllergens": "No allergens declared — this does not guarantee the item is allergen-free, see the note below",
+    "source": "Source",
+    "searchPlaceholder": "Search by name...",
+    "searchButton": "Search",
+    "noResults": "No results.",
+    "unknown": "not available",
+    "perHundredGrams": "Values per 100g.",
+    "factsHeading": "Nutrition facts"
+  },
+  "Ingredients": {
+    "heading": "Ingredients",
+    "subheading": "Generic raw foods with detailed nutrition, sourced from USDA FoodData Central (public domain).",
+    "backLink": "Back to ingredients"
+  },
+  "Products": {
+    "heading": "Products (Czechia)",
+    "subheading": "Branded products available in Czechia, sourced from Open Food Facts.",
+    "attribution": "Product data from Open Food Facts, available under the Open Database License (ODbL).",
+    "backLink": "Back to products"
+  },
+  "Allergens": {
+    "gluten": "Cereals containing gluten",
+    "crustaceans": "Crustaceans",
+    "eggs": "Eggs",
+    "fish": "Fish",
+    "peanuts": "Peanuts",
+    "soybeans": "Soybeans",
+    "milk": "Milk (incl. lactose)",
+    "nuts": "Tree nuts",
+    "celery": "Celery",
+    "mustard": "Mustard",
+    "sesame-seeds": "Sesame seeds",
+    "sulphur-dioxide-and-sulphites": "Sulphur dioxide and sulphites",
+    "lupin": "Lupin",
+    "molluscs": "Molluscs"
+  },
   "Home": {
     "heading": "arfid-meals",
     "tagline": "Balanced meals you can actually trust, built around what you can't eat — not just what's healthy.",

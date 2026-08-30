@@ -121,12 +121,35 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       Test user cleaned up from the database afterward. Git initialized,
       first commit made (secrets/generated Prisma client confirmed
       gitignored before committing).
-- [ ] M2 — Ingredient + product data import: import pipeline pulling a
+- [x] M2 — Ingredient + product data import: import pipeline pulling a
       starter set of raw ingredients from USDA FDC (full macro/micronutrient
       detail) and a starter set of Czechia-scoped products from Open Food
       Facts (gluten/lactose/sugar/allergen extraction), both stored with
       source attribution per license. Read-only browse/search UI for both
-      (no auth needed to view).
+      (no auth needed to view). ✔ 2026-08-30. Delivered: `npm run
+      seed:taxonomy` (14 EU-regulated allergens + a 15-entry FoodGroup
+      tree), `npm run import:ingredients` (2,413 raw ingredients from
+      USDA FDC's SR Legacy dataset — a real filtered subset, not a hand-
+      picked list; see HANDOVER D8), `npm run import:products` (493
+      Czechia-scoped products from Open Food Facts, rate-limited to their
+      documented 10 req/min search limit). `/ingredients` and `/products`
+      browse+search pages plus per-item detail pages showing full
+      macro/micronutrient facts, allergen badges, gluten/lactose flags,
+      the safety disclaimer, and source attribution — all translated
+      cs/en. 9 new Vitest unit tests for the name-based allergen/gluten/
+      lactose inference heuristic (the ingredient tier's only source of
+      allergen data, since USDA doesn't provide it — see HANDOVER D9).
+      Verified: both import scripts run end-to-end against the real
+      external sources (not fixtures) and real DB row counts/spot-checks
+      confirmed by hand; browse/search and detail pages driven in a real
+      browser in both locales. Found and fixed two real data-quality
+      issues along the way (see HANDOVER D10): a handful of Open Food
+      Facts entries with physically implausible calorie values (up to
+      24,000 kcal/100g — filtered out on import) and Open Food Facts'
+      allergen tags being incomplete on some real products (not
+      fixable — the "no allergens declared" copy was reworded to stop
+      reading as a safety guarantee it isn't). `tsc`, `eslint`, `next
+      build`, and the full Vitest suite all clean.
 - [ ] M3 — Recipe/meal admin + database: Owner-facing admin UI to compose
       meals from ingredients/products (auto-computed nutrition totals),
       set meal-type and effort tags, add optional step-by-step
@@ -145,6 +168,32 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       flow), README/HANDOVER finalized.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-08-30 — **M2 done and verified.** Built the taxonomy seed
+  (`scripts/seed-taxonomy.ts`) and both import pipelines
+  (`scripts/import-ingredients.ts`, `scripts/import-products.ts`), then
+  ran them for real: 2,413 ingredients (USDA FDC SR Legacy, filtered to
+  13 raw/generic food categories minus any cooking-method keyword — see
+  HANDOVER D8) and 493 Czech products (Open Food Facts search API,
+  rate-limited). Built `src/lib/allergens.ts` (the 14 EU-regulated
+  allergens, each mapped to its Open Food Facts tag) and
+  `src/lib/food-heuristics.ts` (name-based gluten/lactose/allergen
+  inference for the ingredient tier only — HANDOVER D9 explains why
+  that's safe for single-ingredient raw foods but would NOT be safe for
+  branded products, which is exactly why products use OFF's own declared
+  tags instead). Built `/ingredients` and `/products` browse+search pages
+  and per-item detail pages (nutrition facts, allergen badges, gluten/
+  lactose flags, safety disclaimer, source attribution), linked from a
+  new site nav, translated cs/en. Caught two real data-quality problems
+  while spot-checking real imported data (not hypothetical — see HANDOVER
+  D10): OFF entries with impossible calorie values (fixed: implausible-
+  value filter added to the import script, bad rows purged) and OFF's
+  allergen tags being incomplete on some genuine dairy products (not
+  fixable at the data layer — reworded the "no allergens declared" UI
+  copy so it reads as an absence of a positive signal, not a safety
+  guarantee). 9 new Vitest unit tests for the heuristic module. `tsc`,
+  `eslint`, `next build` clean; full Vitest suite green. **Stopping here
+  per OPERATIONS.md milestone checkpoint — awaiting Owner review before
+  starting M3** (recipe/meal admin UI + seeded meal database).
 - 2026-08-30 — **M1 done and verified.** Scaffolded via `create-next-app`
   matching listing-studio/when-we-meet's exact Next 16.2.10/React 19.2.4
   versions, then added Prisma 7 (client output to `src/generated/prisma`,

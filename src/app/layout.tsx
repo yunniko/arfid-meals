@@ -40,6 +40,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const t = await getTranslations("Common");
+  const tNav = await getTranslations("Nav");
   return (
     <html
       lang={locale}
@@ -47,7 +48,18 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>
-          <div className="flex justify-end px-4 py-2">
+          <div className="flex items-center justify-between px-4 py-2">
+            <nav className="flex gap-4 text-sm">
+              <Link href="/" className="hover:underline">
+                {tNav("home")}
+              </Link>
+              <Link href="/ingredients" className="hover:underline">
+                {tNav("ingredients")}
+              </Link>
+              <Link href="/products" className="hover:underline">
+                {tNav("products")}
+              </Link>
+            </nav>
             <LocaleSwitcher />
           </div>
           <div className="flex-1 flex flex-col">{children}</div>
