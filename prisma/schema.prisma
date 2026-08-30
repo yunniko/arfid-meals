@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth (next-auth / Auth.js — Prisma adapter shape)
+// ---------------------------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  // Null for OAuth-only users.
+  passwordHash  String?
+  role          Role      @default(USER)
+  // GDPR/ToS consent proof, incl. the ARFID safety-reevaluation disclaimer
+  // (G-001 acceptance criterion 6) — recorded at registration.
+  termsAcceptedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  profile  UserProfile?
+  meals    Meal[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ---------------------------------------------------------------------------
+// Shared vocabulary: allergens and food groups
+// ---------------------------------------------------------------------------
+
+// A controlled list (e.g. the 14 EU-regulated allergens plus any extras the
+// Owner wants to track) rather than free text, so exclusion rules and
+// product/ingredient flags can match reliably.
+model Allergen {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  productLinks    ProductAllergen[]
+  ingredientLinks IngredientAllergen[]
+
+  @@map("allergens")
+}
+
+// Hierarchical food grouping (e.g. "meat" -> "poultry" -> "chicken") so an
+// ExclusionRule can target a whole branch at any level. Self-referential
+// tree, no depth limit.
+model FoodGroup {
+  id       String      @id @default(cuid())
+  slug     String      @unique
+  name     String
+  parentId String?
+  parent   FoodGroup?  @relation("FoodGroupTree", fields: [parentId], references: [id])
+  children FoodGroup[] @relation("FoodGroupTree")
+
+  ingredients    Ingredient[]
+  exclusionRules ExclusionRule[]
+
+  @@map("food_groups")
+}
+
+// ---------------------------------------------------------------------------
+// Ingredient tier: generic raw foods, sourced from USDA FoodData Central.
+// Nutrition is per 100g, country-agnostic (see HANDOVER D2).
+// ---------------------------------------------------------------------------
+
+model Ingredient {
+  id           String  @id @default(cuid())
+  name         String
+  // USDA FDC's own id, for re-import/dedup and attribution.
+  fdcId        Int?    @unique
+  foodGroupId  String?
+  foodGroup    FoodGroup? @relation(fields: [foodGroupId], references: [id])
+
+  // Per 100g. Nullable: not every FDC entry reports every nutrient.
+  kcal          Float?
+  proteinG      Float?
+  fatG          Float?
+  carbsG        Float?
+  sugarG        Float?
+  fiberG        Float?
+  sodiumMg      Float?
+
+  containsGluten  Boolean?
+  containsLactose Boolean?
+
+  source       String  @default("usda_fdc")
+  sourceUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  allergenLinks   IngredientAllergen[]
+  mealComponents  MealComponent[]
+  exclusionRules  ExclusionRule[]
+
+  @@map("ingredients")
+}
+
+model IngredientAllergen {
+  ingredientId String
+  allergenId   String
+
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  allergen   Allergen   @relation(fields: [allergenId], references: [id], onDelete: Cascade)
+
+  @@id([ingredientId, allergenId])
+  @@map("ingredient_allergens")
+}
+
+// ---------------------------------------------------------------------------
+// Product tier: branded, country-scoped market products, sourced from Open
+// Food Facts (ODbL — attribution recorded via `source`/`sourceUrl`).
+// ---------------------------------------------------------------------------
+
+model Product {
+  id           String  @id @default(cuid())
+  name         String
+  brand        String?
+  // Open Food Facts' own barcode/id, for re-import/dedup and attribution.
+  barcode      String? @unique
+  // ISO 3166-1 alpha-2, e.g. "CZ". A product can legitimately be sold in
+  // more than one of the countries this app supports later; kept singular
+  // for MVP (Czechia-only, see HANDOVER D3) and can become a join table if
+  // a second market is added.
+  countryCode  String
+
+  // Per 100g, as reported by Open Food Facts.
+  kcal          Float?
+  proteinG      Float?
+  fatG          Float?
+  carbsG        Float?
+  sugarG        Float?
+  fiberG        Float?
+  sodiumMg      Float?
+
+  containsGluten  Boolean?
+  containsLactose Boolean?
+
+  source       String  @default("open_food_facts")
+  sourceUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  allergenLinks  ProductAllergen[]
+  mealComponents MealComponent[]
+  exclusionRules ExclusionRule[]
+
+  @@index([countryCode])
+  @@map("products")
+}
+
+model ProductAllergen {
+  productId  String
+  allergenId String
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  allergen Allergen @relation(fields: [allergenId], references: [id], onDelete: Cascade)
+
+  @@id([productId, allergenId])
+  @@map("product_allergens")
+}
+
+// ---------------------------------------------------------------------------
+// Meal tier: Owner-authored, composed from ingredients/products.
+// ---------------------------------------------------------------------------
+
+enum MealTypeTag {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum MealEffortTag {
+  LOW_EFFORT
+  EASY
+  HARD
+  FAST
+  LONG
+}
+
+model Meal {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  // Optional — some meals need no preparation at all (e.g. "a yogurt").
+  steps       String?
+
+  // Visible on-page safety disclaimer text (G-001 acceptance criterion 6).
+  // Falls back to a generic app-wide disclaimer at render time if null.
+  safetyNote  String?
+
+  typeTags   MealTypeTag[]
+  effortTags MealEffortTag[]
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  components MealComponent[]
+
+  @@map("meals")
+}
+
+// A meal's ingredient/product list with quantities, used to compute the
+// meal's total nutrition. Exactly one of ingredientId/productId is set.
+model MealComponent {
+  id           String  @id @default(cuid())
+  mealId       String
+  ingredientId String?
+  productId    String?
+  quantityG    Float
+
+  meal       Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
+  product    Product?    @relation(fields: [productId], references: [id])
+
+  @@map("meal_components")
+}
+
+// ---------------------------------------------------------------------------
+// User profile & exclusion lists
+// ---------------------------------------------------------------------------
+
+enum ExclusionListType {
+  BLACKLIST
+  WHITELIST
+}
+
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exclusionRules ExclusionRule[]
+
+  @@map("user_profiles")
+}
+
+// One row per exclusion, at exactly one of three granularities:
+//   - foodGroupId set only  -> whole group (e.g. "meat")
+//   - ingredientId set only -> specific food, any preparation (e.g. "chicken")
+//   - ingredientId + preparation set -> specific preparation (e.g. "fried chicken")
+// productId mirrors the ingredient case for branded market products.
+// `listType` says whether this rule blacklists or whitelists its target;
+// a profile normally uses one consistently, but the schema doesn't force it.
+model ExclusionRule {
+  id           String            @id @default(cuid())
+  profileId    String
+  profile      UserProfile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  listType     ExclusionListType
+
+  foodGroupId  String?
+  foodGroup    FoodGroup?  @relation(fields: [foodGroupId], references: [id])
+  ingredientId String?
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id])
+  productId    String?
+  product      Product?    @relation(fields: [productId], references: [id])
+  // Free-text preparation qualifier (e.g. "fried"), only meaningful when
+  // ingredientId or productId is also set.
+  preparation  String?
+
+  createdAt DateTime @default(now())
+
+  @@map("exclusion_rules")
+}

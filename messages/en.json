@@ -1,0 +1,44 @@
+{
+  "Metadata": {
+    "title": "arfid-meals",
+    "description": "Build balanced meals that are safe for you — for ARFID and food intolerances."
+  },
+  "Common": {
+    "aboutLink": "About & Terms",
+    "safetyDisclaimer": "Always double-check that an ingredient, product, or meal is actually safe for your own condition — this app cannot verify that for you."
+  },
+  "LocaleSwitcher": {
+    "label": "Language"
+  },
+  "Home": {
+    "heading": "arfid-meals",
+    "tagline": "Balanced meals you can actually trust, built around what you can't eat — not just what's healthy.",
+    "loginLink": "Log in",
+    "registerLink": "Create account"
+  },
+  "Register": {
+    "heading": "Create your account",
+    "email": "Email",
+    "password": "Password",
+    "termsLabel": "I have read and accept the Terms & Conditions, including that I must reevaluate for myself whether any meal or ingredient is safe for my own condition.",
+    "submit": "Create account",
+    "loginLink": "Already have an account? Log in",
+    "errors": {
+      "invalidEmail": "Enter a valid email address.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "termsRequired": "You must accept the Terms & Conditions to continue.",
+      "emailTaken": "An account with this email already exists.",
+      "unknown": "Something went wrong. Please try again."
+    }
+  },
+  "Login": {
+    "heading": "Log in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Log in",
+    "registerLink": "No account yet? Create one",
+    "errors": {
+      "invalidCredentials": "Incorrect email or password."
+    }
+  }
+}

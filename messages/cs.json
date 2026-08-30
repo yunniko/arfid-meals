@@ -1,0 +1,44 @@
+{
+  "Metadata": {
+    "title": "arfid-meals",
+    "description": "Sestavte si vyvážená jídla, která jsou pro vás bezpečná — pro ARFID a potravinové intolerance."
+  },
+  "Common": {
+    "aboutLink": "O aplikaci a podmínky",
+    "safetyDisclaimer": "Vždy si sami ověřte, že je daná surovina, produkt nebo jídlo skutečně bezpečné pro váš konkrétní stav — aplikace to za vás nedokáže ověřit."
+  },
+  "LocaleSwitcher": {
+    "label": "Jazyk"
+  },
+  "Home": {
+    "heading": "arfid-meals",
+    "tagline": "Vyvážená jídla, kterým můžete věřit, sestavená podle toho, co nemůžete jíst — ne jen podle toho, co je zdravé.",
+    "loginLink": "Přihlásit se",
+    "registerLink": "Vytvořit účet"
+  },
+  "Register": {
+    "heading": "Vytvořte si účet",
+    "email": "E-mail",
+    "password": "Heslo",
+    "termsLabel": "Přečetl(a) jsem si a souhlasím s Podmínkami použití, včetně toho, že si sám/sama musím ověřit, zda je jakékoli jídlo nebo surovina bezpečná pro můj konkrétní stav.",
+    "submit": "Vytvořit účet",
+    "loginLink": "Už máte účet? Přihlaste se",
+    "errors": {
+      "invalidEmail": "Zadejte platnou e-mailovou adresu.",
+      "passwordTooShort": "Heslo musí mít alespoň 8 znaků.",
+      "termsRequired": "Pro pokračování musíte souhlasit s Podmínkami použití.",
+      "emailTaken": "Účet s tímto e-mailem už existuje.",
+      "unknown": "Něco se pokazilo. Zkuste to prosím znovu."
+    }
+  },
+  "Login": {
+    "heading": "Přihlášení",
+    "email": "E-mail",
+    "password": "Heslo",
+    "submit": "Přihlásit se",
+    "registerLink": "Ještě nemáte účet? Vytvořte si ho",
+    "errors": {
+      "invalidCredentials": "Nesprávný e-mail nebo heslo."
+    }
+  }
+}

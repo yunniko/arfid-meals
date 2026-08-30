@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arfid
+      POSTGRES_PASSWORD: arfid
+      POSTGRES_DB: arfid_meals
+    ports:
+      - "127.0.0.1:54322:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arfid -d arfid_meals"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Production-style app/migrate services (matching listing-studio/
+  # when-we-meet's `--profile app` deploy pattern, see
+  # COMPANY/INFRASTRUCTURE.md) will be added together with a Dockerfile
+  # once this project is actually ready to deploy — not needed for local
+  # dev, which stays `docker compose up -d db` + `npm run dev`.
+
+volumes:
+  db-data:
