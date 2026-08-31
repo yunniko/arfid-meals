@@ -11,12 +11,15 @@ user can trust.
 
 ## Status
 
-M1 and M2 done: app scaffold, database schema, email/password auth, cs/en
-i18n, and a real starter ingredient/product database — 2,413 raw
-ingredients (USDA FoodData Central) and 493 Czech market products (Open
-Food Facts), browsable and searchable at `/ingredients` and `/products`.
-No meals/recipes yet. See `GOALS.md` (G-001) for the full milestone plan
-and `HANDOVER.md` for architecture/decision notes.
+M1-M3 done: app scaffold, database schema, email/password auth, cs/en
+i18n, a starter ingredient/product database (2,413 USDA ingredients, 493
+Czech Open Food Facts products, browsable at `/ingredients`/`/products`),
+and a meal admin (`/admin/meals`, `Role.ADMIN`-gated) with public
+`/meals` browse pages showing computed nutrition and combined allergens.
+The meals table itself is empty — real meal content is Owner-authored
+work via the admin UI, not something JulAI seeds (see HANDOVER D5/D11).
+See `GOALS.md` (G-001) for the full milestone plan and `HANDOVER.md` for
+architecture/decision notes.
 
 ## How to run
 

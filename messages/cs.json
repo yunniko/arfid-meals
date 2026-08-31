@@ -13,10 +13,13 @@
   "Nav": {
     "home": "Domů",
     "ingredients": "Suroviny",
-    "products": "Produkty"
+    "products": "Produkty",
+    "meals": "Jídla",
+    "admin": "Administrace"
   },
   "Nutrition": {
     "kcal": "kcal / 100 g",
+    "kcalUnit": "kcal",
     "protein": "Bílkoviny",
     "fat": "Tuky",
     "carbs": "Sacharidy",
@@ -35,7 +38,8 @@
     "noResults": "Žádné výsledky.",
     "unknown": "není k dispozici",
     "perHundredGrams": "Hodnoty na 100 g.",
-    "factsHeading": "Nutriční hodnoty"
+    "factsHeading": "Nutriční hodnoty",
+    "incompleteTotal": "Tento součet je minimum — alespoň jedné složce tento údaj chybí."
   },
   "Ingredients": {
     "heading": "Suroviny",
@@ -47,6 +51,57 @@
     "subheading": "Značkové produkty dostupné v Česku, zdroj: Open Food Facts.",
     "attribution": "Data o produktech pocházejí z Open Food Facts, dostupná pod licencí Open Database License (ODbL).",
     "backLink": "Zpět na produkty"
+  },
+  "Admin": {
+    "meals": {
+      "heading": "Jídla (administrace)",
+      "newLink": "Nové jídlo",
+      "editLink": "Upravit",
+      "deleteButton": "Smazat",
+      "noMeals": "Zatím žádná jídla.",
+      "form": {
+        "name": "Název",
+        "description": "Popis",
+        "steps": "Postup přípravy (nepovinné)",
+        "safetyNote": "Bezpečnostní poznámka (nepovinné, zobrazí se na stránce jídla)",
+        "typeTags": "Typ jídla",
+        "effortTags": "Náročnost",
+        "ingredientsHeading": "Suroviny",
+        "productsHeading": "Produkty",
+        "componentSearchPlaceholder": "Hledat podle názvu...",
+        "selectedHeading": "Vybrané složky",
+        "noneSelected": "Zatím nic nepřidáno.",
+        "removeButton": "Odebrat",
+        "submit": "Uložit jídlo",
+        "errors": {
+          "nameRequired": "Název je povinný.",
+          "componentsRequired": "Přidejte alespoň jednu surovinu nebo produkt.",
+          "unknown": "Něco se pokazilo. Zkuste to prosím znovu."
+        }
+      }
+    }
+  },
+  "Meals": {
+    "heading": "Jídla",
+    "subheading": "Vyvážená jídla sestavená z výše uvedené databáze surovin a produktů.",
+    "backLink": "Zpět na jídla",
+    "preparationHeading": "Příprava",
+    "componentsHeading": "Složeno z",
+    "noSteps": "Příprava není potřeba.",
+    "allergensNote": "Souhrn alergenů napříč vším v tomto jídle."
+  },
+  "MealTypeTag": {
+    "BREAKFAST": "Snídaně",
+    "LUNCH": "Oběd",
+    "DINNER": "Večeře",
+    "SNACK": "Svačina"
+  },
+  "MealEffortTag": {
+    "LOW_EFFORT": "Bez námahy",
+    "EASY": "Jednoduché",
+    "HARD": "Náročné",
+    "FAST": "Rychlé",
+    "LONG": "Zdlouhavé"
   },
   "Allergens": {
     "gluten": "Obiloviny obsahující lepek",

@@ -150,11 +150,30 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       fixable — the "no allergens declared" copy was reworded to stop
       reading as a safety guarantee it isn't). `tsc`, `eslint`, `next
       build`, and the full Vitest suite all clean.
-- [ ] M3 — Recipe/meal admin + database: Owner-facing admin UI to compose
+- [x] M3 — Recipe/meal admin + database: Owner-facing admin UI to compose
       meals from ingredients/products (auto-computed nutrition totals),
       set meal-type and effort tags, add optional step-by-step
-      instructions, and set the per-meal safety-disclaimer marker. Seed an
-      initial real set of meals covering breakfast/lunch/dinner/snack.
+      instructions, and set the per-meal safety-disclaimer marker. ✔
+      2026-08-31/09-01. Delivered `/admin/meals` (list/create/edit/delete,
+      `Role.ADMIN`-gated), a search-and-add composer for both ingredients
+      and products with live quantity editing, and public `/meals` +
+      `/meals/[id]` browse pages showing computed nutrition totals,
+      combined allergens across every component, tags, prep steps, and
+      the safety disclaimer. Verified end to end in a real browser:
+      registered an admin (via a temporary `ADMIN_EMAIL`, reverted after),
+      composed a real two-component meal (a USDA ingredient + an Open
+      Food Facts product) through the actual UI, confirmed the computed
+      total (618.6 kcal) and the "this total is a minimum" flag correctly
+      appearing only for fields where a component's data was genuinely
+      missing, and confirmed the admin gate's all three branches (no
+      session → redirect to `/login`; signed in but not admin → 404;
+      admin → full access). Deliberately did NOT seed "an initial real
+      set of meals" as originally worded in this milestone's plan — see
+      HANDOVER D11 for why, and what was verified instead (create the
+      admin UI, prove it works with a throwaway test meal, delete the
+      test meal, leave the table empty for the Owner). `tsc`, `eslint`,
+      `next build` clean; 14/14 Vitest tests green (5 new, covering
+      `computeMealTotals`).
 - [ ] M4 — User profiles & exclusion lists: registration/login, profile
       page with black/white list management UI at group/food/preparation
       granularity.
@@ -168,6 +187,22 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       flow), README/HANDOVER finalized.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-09-01 — **M3 done and verified.** Built the meal admin (composer
+  with live ingredient/product search via two new `/api/search/*`
+  routes, tag checkboxes, optional steps/safety-note fields) and public
+  meal browse/detail pages, on top of a new pure `computeMealTotals`
+  function (`src/lib/meal-nutrition.ts`) that sums scaled per-100g
+  values across a meal's components and explicitly flags which totals
+  are undercounts due to missing source data, rather than silently
+  treating "unknown" as "zero". `requireAdmin()` gates every admin route
+  and action server-side (never trusting the client), verified against
+  all three real cases in a browser: no session, wrong role, and admin.
+  Followed the create-then-delete verification pattern from M1/M2 rather
+  than leaving fake content in the database — see HANDOVER D11 for the
+  reasoning tied to the Owner's D5 decision. 5 new Vitest tests (14
+  total), full suite green; `tsc`/`eslint`/`next build` clean.
+  **Stopping here per OPERATIONS.md milestone checkpoint — awaiting
+  Owner review before starting M4** (user profiles & exclusion lists).
 - 2026-08-30 — **M2 done and verified.** Built the taxonomy seed
   (`scripts/seed-taxonomy.ts`) and both import pipelines
   (`scripts/import-ingredients.ts`, `scripts/import-products.ts`), then

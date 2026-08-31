@@ -13,10 +13,13 @@
   "Nav": {
     "home": "Home",
     "ingredients": "Ingredients",
-    "products": "Products"
+    "products": "Products",
+    "meals": "Meals",
+    "admin": "Admin"
   },
   "Nutrition": {
     "kcal": "kcal / 100g",
+    "kcalUnit": "kcal",
     "protein": "Protein",
     "fat": "Fat",
     "carbs": "Carbohydrates",
@@ -35,7 +38,8 @@
     "noResults": "No results.",
     "unknown": "not available",
     "perHundredGrams": "Values per 100g.",
-    "factsHeading": "Nutrition facts"
+    "factsHeading": "Nutrition facts",
+    "incompleteTotal": "This total is a minimum — at least one component is missing this value."
   },
   "Ingredients": {
     "heading": "Ingredients",
@@ -47,6 +51,57 @@
     "subheading": "Branded products available in Czechia, sourced from Open Food Facts.",
     "attribution": "Product data from Open Food Facts, available under the Open Database License (ODbL).",
     "backLink": "Back to products"
+  },
+  "Admin": {
+    "meals": {
+      "heading": "Meals (admin)",
+      "newLink": "New meal",
+      "editLink": "Edit",
+      "deleteButton": "Delete",
+      "noMeals": "No meals yet.",
+      "form": {
+        "name": "Name",
+        "description": "Description",
+        "steps": "Preparation steps (optional)",
+        "safetyNote": "Safety note (optional, shown on the meal page)",
+        "typeTags": "Meal type",
+        "effortTags": "Effort",
+        "ingredientsHeading": "Ingredients",
+        "productsHeading": "Products",
+        "componentSearchPlaceholder": "Search by name...",
+        "selectedHeading": "Selected components",
+        "noneSelected": "Nothing added yet.",
+        "removeButton": "Remove",
+        "submit": "Save meal",
+        "errors": {
+          "nameRequired": "Name is required.",
+          "componentsRequired": "Add at least one ingredient or product.",
+          "unknown": "Something went wrong. Please try again."
+        }
+      }
+    }
+  },
+  "Meals": {
+    "heading": "Meals",
+    "subheading": "Balanced meals composed from the ingredient and product database above.",
+    "backLink": "Back to meals",
+    "preparationHeading": "Preparation",
+    "componentsHeading": "Made from",
+    "noSteps": "No preparation needed.",
+    "allergensNote": "Combined allergens across everything in this meal."
+  },
+  "MealTypeTag": {
+    "BREAKFAST": "Breakfast",
+    "LUNCH": "Lunch",
+    "DINNER": "Dinner",
+    "SNACK": "Snack"
+  },
+  "MealEffortTag": {
+    "LOW_EFFORT": "Low-effort",
+    "EASY": "Easy",
+    "HARD": "Hard",
+    "FAST": "Fast",
+    "LONG": "Long"
   },
   "Allergens": {
     "gluten": "Cereals containing gluten",

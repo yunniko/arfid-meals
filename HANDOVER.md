@@ -5,15 +5,17 @@ Read this before touching the project. Goal and milestone plan live in
 
 ## Current state
 
-M1 and M2 are done and verified — see `GOALS.md` G-001 for the full
+M1, M2, and M3 are done and verified — see `GOALS.md` G-001 for the full
 record. Working: Next.js app scaffold, Prisma schema + migration,
-email/password auth, cs/en i18n, and now a real (if starter-sized)
-ingredient/product database — 2,413 USDA-sourced raw ingredients and 493
-Open-Food-Facts-sourced Czech products, both browsable and searchable at
-`/ingredients` and `/products`. Not built yet: recipe/meal admin + seeded
-meals (M3), user-facing exclusion-list UI (M4), meal generation (M5), and
-the real Terms & Conditions (M6 — `/about` is still a stub carrying just
-the safety disclaimer).
+email/password auth, cs/en i18n, a starter ingredient/product database
+(2,413 USDA ingredients, 493 Czech Open Food Facts products), and now a
+full meal admin (compose from ingredients/products, tags, steps, safety
+note) plus public meal browse/detail pages with computed nutrition and
+combined allergens. The `meals` table is intentionally empty right now —
+see D11 — waiting on the Owner to populate it through `/admin/meals`.
+Not built yet: user-facing exclusion-list UI (M4), meal generation (M5),
+and the real Terms & Conditions (M6 — `/about` is still a stub carrying
+just the safety disclaimer).
 
 ## How to run
 
@@ -152,6 +154,24 @@ guarantee the item is allergen-free — the existing safety disclaimer
 already covers this class of risk, but the specific empty-list case
 deserved its own explicit caveat rather than reading as reassurance.
 
+**D11 — M3 built the meal admin UI, but deliberately did not seed real
+meal content, despite the original milestone wording ("seed an initial
+real set of meals").** The Owner's own D5 decision was explicit: recipe
+content is Owner-authored via the admin UI, specifically *not*
+JulAI-drafted, to avoid licensing risk and keep ARFID-appropriate framing
+under direct Owner control. Populating the database with several
+JulAI-invented meals — even simple ones — would have quietly worked
+around that decision under cover of "just seeding test data." Instead,
+M3 was verified the same way M1 verified its test user and M2 verified
+its imports: create real data through the real UI, confirm it behaves
+correctly end to end (computed totals, allergen aggregation, admin-gate
+enforcement), then delete it. The `meals` table is empty on purpose —
+the Owner is expected to populate it for real via `/admin/meals` (set
+`ADMIN_EMAIL` in `.env` first, see "How to run" above). If the Owner
+would rather JulAI draft a starter set after all, that's a scope change
+to ask for explicitly, not something to infer from the original
+milestone wording over-riding their own D5 decision.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -198,10 +218,30 @@ read-only layer over the same Prisma models; `src/components/nutrition/*`
 holds the shared nutrition-facts table, allergen badge list, and search
 form used by both tiers' pages.
 
+**Meal admin & browse**: `src/lib/meal-nutrition.ts` (pure —
+`computeMealTotals`, unit-tested) → `src/lib/meal-queries.ts` (Prisma
+reads, applies the pure function and unions component allergens) is the
+public-facing read path (`/meals`, `/meals/[id]`). `src/lib/require-admin.ts`
+gates every route/action under `/admin/meals` and `meal-actions.ts`
+(no session → `/login`; wrong role → `notFound()`). `src/lib/meal-actions.ts`
+(server actions) + `src/lib/meal-validation.ts` (zod) +
+`src/components/admin/meal-form.tsx` (tag checkboxes, steps/safety-note
+fields) + `src/components/admin/component-picker.tsx` (client-side
+debounced search against the new `/api/search/ingredients` and
+`/api/search/products` routes, which just wrap the existing
+`nutrition-queries.ts` search functions — same data, no new auth
+surface) is the write path. Components are stored as a flat
+`MealComponent` list (ingredient XOR product + quantityG); edits
+delete-and-recreate the whole list rather than diffing, which is fine at
+this scale and keeps the action simple.
+
 ## Next steps and open questions
 
-- Next: M3 — recipe/meal admin UI (Owner-only) + a seeded meal database
-  built from the ingredients/products now in place.
+- Next: M4 — user profiles & exclusion lists (black/white list UI at
+  group/food/preparation granularity).
+- Open: the Owner should populate `/admin/meals` with real content
+  whenever convenient — not blocking M4, but M5 (meal generation) will
+  need a non-trivial number of real meals to be meaningfully testable.
 - Open: final product name/domain (currently just the `arfid-meals`
   codename) — not blocking engineering, but needed before any deploy step.
 - Open: what "balanced" means precisely for meal generation (M5) — likely

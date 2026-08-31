@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/app/locale-switcher";
+import { auth } from "@/auth";
 import "./globals.css";
 
 // latin-ext covers Czech diacritics — the default "latin"-only subset would
@@ -41,6 +42,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   const t = await getTranslations("Common");
   const tNav = await getTranslations("Nav");
+  const session = await auth();
   return (
     <html
       lang={locale}
@@ -59,6 +61,14 @@ export default async function RootLayout({
               <Link href="/products" className="hover:underline">
                 {tNav("products")}
               </Link>
+              <Link href="/meals" className="hover:underline">
+                {tNav("meals")}
+              </Link>
+              {session?.user.role === "ADMIN" && (
+                <Link href="/admin/meals" className="hover:underline">
+                  {tNav("admin")}
+                </Link>
+              )}
             </nav>
             <LocaleSwitcher />
           </div>
