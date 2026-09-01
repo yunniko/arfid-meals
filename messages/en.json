@@ -15,6 +15,7 @@
     "ingredients": "Ingredients",
     "products": "Products",
     "meals": "Meals",
+    "profile": "Profile",
     "admin": "Admin"
   },
   "Nutrition": {
@@ -51,6 +52,32 @@
     "subheading": "Branded products available in Czechia, sourced from Open Food Facts.",
     "attribution": "Product data from Open Food Facts, available under the Open Database License (ODbL).",
     "backLink": "Back to products"
+  },
+  "Profile": {
+    "heading": "Your profile",
+    "rulesHeading": "Your black/white list",
+    "noRules": "No rules yet — add one below.",
+    "removeButton": "Remove",
+    "blacklist": "Blacklist",
+    "whitelist": "Whitelist",
+    "listTypeLabel": "List",
+    "addGroupHeading": "Exclude/include a whole food group",
+    "groupLabel": "Food group",
+    "addItemHeading": "Exclude/include a specific ingredient or product",
+    "itemLabel": "Ingredient or product",
+    "itemSearchPlaceholder": "Search by name...",
+    "changeButton": "Change",
+    "preparationLabel": "Specific preparation (optional — e.g. \"fried\"). Leave blank to cover every preparation.",
+    "submit": "Add rule",
+    "ruleGroup": "{list}: whole group — {name}",
+    "ruleItemAny": "{list}: {name} (any preparation)",
+    "ruleItemPrepared": "{list}: {name}, {preparation}",
+    "errors": {
+      "invalidListType": "Choose Blacklist or Whitelist.",
+      "groupRequired": "Choose a food group.",
+      "itemRequired": "Search for and select an ingredient or product first.",
+      "unknown": "Something went wrong. Please try again."
+    }
   },
   "Admin": {
     "meals": {

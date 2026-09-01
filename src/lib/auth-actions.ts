@@ -33,6 +33,9 @@ export async function registerAction(
       email: parsed.data.email,
       passwordHash,
       termsAcceptedAt: new Date(),
+      // Every user gets a profile up front — the exclusion-list feature
+      // (G-001 M4) always has somewhere to attach rules to.
+      profile: { create: {} },
     },
   });
 

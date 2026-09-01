@@ -5,17 +5,18 @@ Read this before touching the project. Goal and milestone plan live in
 
 ## Current state
 
-M1, M2, and M3 are done and verified — see `GOALS.md` G-001 for the full
-record. Working: Next.js app scaffold, Prisma schema + migration,
-email/password auth, cs/en i18n, a starter ingredient/product database
-(2,413 USDA ingredients, 493 Czech Open Food Facts products), and now a
-full meal admin (compose from ingredients/products, tags, steps, safety
-note) plus public meal browse/detail pages with computed nutrition and
-combined allergens. The `meals` table is intentionally empty right now —
-see D11 — waiting on the Owner to populate it through `/admin/meals`.
-Not built yet: user-facing exclusion-list UI (M4), meal generation (M5),
-and the real Terms & Conditions (M6 — `/about` is still a stub carrying
-just the safety disclaimer).
+M1-M4 are done and verified — see `GOALS.md` G-001 for the full record.
+Working: Next.js app scaffold, Prisma schema + migration, email/password
+auth, cs/en i18n, a starter ingredient/product database (2,413 USDA
+ingredients, 493 Czech Open Food Facts products), a meal admin (compose
+from ingredients/products, tags, steps, safety note) plus public meal
+browse/detail pages, and now user profiles with black/white exclusion
+lists at group/food/preparation granularity (`/profile`). The `meals`
+table is intentionally empty right now — see D11 — waiting on the Owner
+to populate it through `/admin/meals`. Not built yet: meal generation
+that actually applies a profile's exclusion rules (M5), and the real
+Terms & Conditions (M6 — `/about` is still a stub carrying just the
+safety disclaimer).
 
 ## How to run
 
@@ -172,6 +173,21 @@ would rather JulAI draft a starter set after all, that's a scope change
 to ask for explicitly, not something to infer from the original
 milestone wording over-riding their own D5 decision.
 
+**D12 — Testing note, not a product decision: JWT sessions outlive a
+deleted test user.** Discovered while cleaning up M4's manual test
+accounts: sessions use the JWT strategy (`src/auth.ts`, required for the
+Credentials provider), so a session cookie stays valid — and the nav bar
+still shows as logged in, with whatever role was in the token — even
+after the underlying `User` row is deleted directly in Postgres, since
+nothing re-checks the DB per request. This is standard NextAuth JWT
+behavior, not a bug, and isn't reachable in the real product yet (there's
+no user-deletion feature exposed to users). It only bit during manual
+testing because cleanup deleted DB rows without also logging out in the
+browser. Noting it so a future session doesn't mistake it for an app
+defect: when clearing test users mid-session, log out via the UI first
+(or expect a stale-looking session until the browser's cookie is
+cleared/expires) rather than just deleting the DB row.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -235,13 +251,29 @@ surface) is the write path. Components are stored as a flat
 delete-and-recreate the whole list rather than diffing, which is fine at
 this scale and keeps the action simple.
 
+**Profiles & exclusion rules**: `src/lib/exclusion-validation.ts` (a zod
+discriminated union on `targetType: "group" | "item"`) →
+`src/lib/exclusion-actions.ts` (`addExclusionRuleAction`,
+`removeExclusionRuleAction` — the latter deletes scoped to
+`profile: { userId: session.user.id }`, so ownership is enforced by the
+query shape itself, not a separate check) → `src/lib/profile-queries.ts`
+(reads) → `/profile` page + `src/components/profile/group-rule-form.tsx`
+(server-rendered `<select>`, no client JS needed) +
+`item-rule-form.tsx` (client, reuses the same debounced-search pattern as
+`component-picker.tsx` but single-select). `registerAction` now creates
+a `UserProfile` alongside the `User` row so every account has one from
+the start; `requireProfileId()` in `exclusion-actions.ts` upserts one
+defensively for any account that predates this (there shouldn't be any
+in practice, but costs nothing to be safe).
+
 ## Next steps and open questions
 
-- Next: M4 — user profiles & exclusion lists (black/white list UI at
-  group/food/preparation granularity).
+- Next: M5 — meal generation that actually applies a profile's
+  exclusion rules (group/item/preparation) to suggest meals.
 - Open: the Owner should populate `/admin/meals` with real content
-  whenever convenient — not blocking M4, but M5 (meal generation) will
-  need a non-trivial number of real meals to be meaningfully testable.
+  whenever convenient — not blocking M4/M5's own mechanics, but M5's
+  generation logic needs a non-trivial number of real meals to be
+  meaningfully testable end to end.
 - Open: final product name/domain (currently just the `arfid-meals`
   codename) — not blocking engineering, but needed before any deploy step.
 - Open: what "balanced" means precisely for meal generation (M5) — likely

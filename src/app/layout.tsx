@@ -64,6 +64,11 @@ export default async function RootLayout({
               <Link href="/meals" className="hover:underline">
                 {tNav("meals")}
               </Link>
+              {session?.user && (
+                <Link href="/profile" className="hover:underline">
+                  {tNav("profile")}
+                </Link>
+              )}
               {session?.user.role === "ADMIN" && (
                 <Link href="/admin/meals" className="hover:underline">
                   {tNav("admin")}

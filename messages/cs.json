@@ -15,6 +15,7 @@
     "ingredients": "Suroviny",
     "products": "Produkty",
     "meals": "Jídla",
+    "profile": "Profil",
     "admin": "Administrace"
   },
   "Nutrition": {
@@ -51,6 +52,32 @@
     "subheading": "Značkové produkty dostupné v Česku, zdroj: Open Food Facts.",
     "attribution": "Data o produktech pocházejí z Open Food Facts, dostupná pod licencí Open Database License (ODbL).",
     "backLink": "Zpět na produkty"
+  },
+  "Profile": {
+    "heading": "Váš profil",
+    "rulesHeading": "Váš černý/bílý seznam",
+    "noRules": "Zatím žádná pravidla — přidejte nějaké níže.",
+    "removeButton": "Odebrat",
+    "blacklist": "Černá listina",
+    "whitelist": "Bílá listina",
+    "listTypeLabel": "Seznam",
+    "addGroupHeading": "Vyloučit/povolit celou skupinu potravin",
+    "groupLabel": "Skupina potravin",
+    "addItemHeading": "Vyloučit/povolit konkrétní surovinu nebo produkt",
+    "itemLabel": "Surovina nebo produkt",
+    "itemSearchPlaceholder": "Hledat podle názvu...",
+    "changeButton": "Změnit",
+    "preparationLabel": "Konkrétní úprava (nepovinné — např. \"smažené\"). Ponechte prázdné pro všechny úpravy.",
+    "submit": "Přidat pravidlo",
+    "ruleGroup": "{list}: celá skupina — {name}",
+    "ruleItemAny": "{list}: {name} (jakákoli úprava)",
+    "ruleItemPrepared": "{list}: {name}, {preparation}",
+    "errors": {
+      "invalidListType": "Vyberte černou nebo bílou listinu.",
+      "groupRequired": "Vyberte skupinu potravin.",
+      "itemRequired": "Nejprve vyhledejte a vyberte surovinu nebo produkt.",
+      "unknown": "Něco se pokazilo. Zkuste to prosím znovu."
+    }
   },
   "Admin": {
     "meals": {

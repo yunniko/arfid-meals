@@ -174,9 +174,30 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       test meal, leave the table empty for the Owner). `tsc`, `eslint`,
       `next build` clean; 14/14 Vitest tests green (5 new, covering
       `computeMealTotals`).
-- [ ] M4 — User profiles & exclusion lists: registration/login, profile
+- [x] M4 — User profiles & exclusion lists: registration/login, profile
       page with black/white list management UI at group/food/preparation
-      granularity.
+      granularity. ✔ 2026-09-01. Every new registration gets a
+      `UserProfile` automatically. `/profile` shows the current rule list
+      plus two add-forms: one for a whole `FoodGroup` (dropdown, parent
+      groups with children indented beneath), one for a specific
+      ingredient/product (live search, same picker pattern as the meal
+      composer) with an optional free-text preparation qualifier — blank
+      covers every preparation, filled in scopes to just that one (the
+      exact "exclude meat as a group, or just fried chicken" example from
+      the original spec). Verified end to end in a real browser: added a
+      whole-group blacklist rule (Meat), confirmed the real DB row and
+      the correct hierarchical dropdown rendering; added an
+      item+preparation rule (a raw chicken breast ingredient + "fried"),
+      confirmed the DB row and the rendered label; removed the group rule
+      and confirmed only the item rule remained. `removeExclusionRuleAction`
+      scopes its delete to the caller's own profile
+      (`profile: { userId: session.user.id }`) so one user can't delete
+      another's rule by guessing an id. en/cs message-key parity checked
+      programmatically (zero missing/extra keys either direction).
+      `tsc`/`eslint`/`next build` clean, full Vitest suite green — no new
+      pure logic here worth unit-testing beyond what zod's schema already
+      declares; the real correctness surface (DB writes, ownership-scoped
+      deletion) was verified live in the browser + DB instead.
 - [ ] M5 — Meal generation: given a profile's exclusions/inclusions,
       generate balanced meal suggestions from the seeded database,
       correctly respecting exclusions at all three granularities.
@@ -187,6 +208,16 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       flow), README/HANDOVER finalized.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-09-01 — **M4 done and verified.** `UserProfile` now created
+  automatically at registration. Built `/profile` with two independent
+  add-rule forms (whole food group; specific ingredient/product +
+  optional preparation) and a remove action scoped to the caller's own
+  profile. Verified live: whole-group blacklist rule, item+preparation
+  rule, and rule removal, each cross-checked against real Postgres rows.
+  Confirmed en/cs message parity programmatically. `tsc`/`eslint`/
+  `next build` clean, full Vitest suite green. **Stopping here per
+  OPERATIONS.md milestone checkpoint — awaiting Owner review before
+  starting M5** (meal generation from a profile's exclusion rules).
 - 2026-09-01 — **M3 done and verified.** Built the meal admin (composer
   with live ingredient/product search via two new `/api/search/*`
   routes, tag checkboxes, optional steps/safety-note fields) and public
