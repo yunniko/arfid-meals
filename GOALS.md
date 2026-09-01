@@ -198,9 +198,31 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       pure logic here worth unit-testing beyond what zod's schema already
       declares; the real correctness surface (DB writes, ownership-scoped
       deletion) was verified live in the browser + DB instead.
-- [ ] M5 — Meal generation: given a profile's exclusions/inclusions,
-      generate balanced meal suggestions from the seeded database,
-      correctly respecting exclusions at all three granularities.
+- [x] M5 — Meal generation: given a profile's exclusions/inclusions,
+      generate meal suggestions from the seeded database, correctly
+      respecting exclusions at all three granularities. ✔ 2026-09-01.
+      `/meals/generate` (auth-required) picks a random compliant meal,
+      with optional meal-type/effort filters and a "try another" link.
+      Core compliance logic (`src/lib/meal-compliance.ts`) is pure and
+      unit-tested (15 new tests: group-vs-descendant matching, item
+      rules with/without a preparation qualifier, whitelist-only
+      full-coverage semantics, blacklist+whitelist combined). "Balanced"
+      was deliberately scoped down from the original spec's framing —
+      see HANDOVER D13 — to mean "respects your list", not a fabricated
+      nutrition-target scoring system. Verified live with 3 real
+      throwaway meals created via the actual admin UI (created, tested,
+      deleted — same pattern as M3): confirmed a whole-group blacklist
+      (Meat) correctly excluded both a beef and a chicken meal (2 of 3 →
+      1 of 3 compliant); confirmed a preparation-qualified blacklist
+      rule ("chicken" + "fried") excluded only the meal whose *steps*
+      actually named "fried", not a beef meal containing no chicken at
+      all; confirmed the type-tag filter (DINNER) correctly narrowed
+      candidates before compliance filtering, and correctly landed on
+      the single remaining compliant meal; confirmed the zero-candidates
+      case (no meals of a given type) and the zero-compliant-but-some-
+      candidates case (an unrelated whitelist rule) both render their
+      distinct, correct messages. `tsc`/`eslint`/`next build` clean,
+      full Vitest suite green (29 tests).
 - [ ] M6 — Legal, polish & testing: Terms & Conditions with the
       safety-reevaluation disclaimer, visible per-item disclaimer marker,
       mobile-viewport pass across all pages, Vitest unit tests
@@ -208,6 +230,23 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       flow), README/HANDOVER finalized.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-09-01 — **M5 done and verified.** Built `src/lib/meal-compliance.ts`
+  (pure, 15 new unit tests) and `src/lib/generation-queries.ts` (Prisma
+  wiring + random pick, moved out of the page component specifically
+  because `Math.random()` inside a Server Component's render body trips
+  the react-hooks/purity lint rule). `/meals/generate` filters by
+  meal-type/effort tag, applies the profile's exclusion rules, and picks
+  one compliant meal at random with a "try another" link. Deliberately
+  scoped "balanced" down to "respects your exclusion list" rather than
+  inventing a nutrition-target scoring formula — see HANDOVER D13.
+  Verified against 3 real meals created (and afterward deleted) through
+  the actual admin UI: whole-group blacklist, preparation-qualified item
+  blacklist, meal-type filtering, and both empty-result branches (no
+  candidates at all vs. candidates but none compliant) all confirmed
+  live. Full Vitest suite green (29 tests), `tsc`/`eslint`/`next build`
+  clean. **Stopping here per OPERATIONS.md milestone checkpoint —
+  awaiting Owner review before starting M6** (Terms & Conditions,
+  mobile-viewport polish, and full test suite).
 - 2026-09-01 — **M4 done and verified.** `UserProfile` now created
   automatically at registration. Built `/profile` with two independent
   add-rule forms (whole food group; specific ingredient/product +

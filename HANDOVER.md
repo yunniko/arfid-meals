@@ -5,18 +5,21 @@ Read this before touching the project. Goal and milestone plan live in
 
 ## Current state
 
-M1-M4 are done and verified — see `GOALS.md` G-001 for the full record.
+M1-M5 are done and verified — see `GOALS.md` G-001 for the full record.
 Working: Next.js app scaffold, Prisma schema + migration, email/password
 auth, cs/en i18n, a starter ingredient/product database (2,413 USDA
 ingredients, 493 Czech Open Food Facts products), a meal admin (compose
 from ingredients/products, tags, steps, safety note) plus public meal
-browse/detail pages, and now user profiles with black/white exclusion
-lists at group/food/preparation granularity (`/profile`). The `meals`
-table is intentionally empty right now — see D11 — waiting on the Owner
-to populate it through `/admin/meals`. Not built yet: meal generation
-that actually applies a profile's exclusion rules (M5), and the real
-Terms & Conditions (M6 — `/about` is still a stub carrying just the
-safety disclaimer).
+browse/detail pages, user profiles with black/white exclusion lists
+(`/profile`), and now meal generation (`/meals/generate`) that filters
+by meal-type/effort tag and applies a profile's exclusion rules before
+picking one at random. The `meals` table is intentionally empty right
+now — see D11 — waiting on the Owner to populate it through
+`/admin/meals`; M5's generation logic was verified against real
+throwaway meals created and then deleted through that same UI, the same
+pattern M3 used. Not built yet: the real Terms & Conditions and a
+mobile-viewport/testing pass (M6 — `/about` is still a stub carrying
+just the safety disclaimer).
 
 ## How to run
 
@@ -188,6 +191,37 @@ defect: when clearing test users mid-session, log out via the UI first
 (or expect a stale-looking session until the browser's cookie is
 cleared/expires) rather than just deleting the DB row.
 
+**D13 — "Balanced" meal generation means "respects your exclusion list",
+not a nutrition-target scoring system.** The product pitch and this
+goal's original milestone wording both use the word "balanced", but the
+actual, testable acceptance criterion (G-001 #5) is only ever about
+exclusion compliance: never suggest a blacklisted item, and for a
+whitelist-only profile, suggest only whitelisted items. Inventing target
+macro ranges per meal-type tag (e.g. "a dinner should have X g protein")
+would require real nutrition-science backing this project doesn't have,
+and a number invented without that backing would be worse than no
+number at all for a safety-focused app — it would look authoritative
+without being trustworthy. So M5 implements exclusion compliance as a
+hard filter (`isMealCompliant`), and the generate page's own copy says
+plainly that it doesn't check any nutrition target, pointing the user to
+the numbers already shown on the meal instead. This is a judgment call,
+not an Owner-confirmed decision — worth revisiting explicitly with the
+Owner if "balanced" was meant to imply more than this.
+
+One direct consequence of this design: group-based exclusion rules only
+match `Ingredient` components, never `Product` ones, because `Product`
+(the Open Food Facts tier) has no `foodGroupId` in this schema — see
+`componentMatchesRule` in `meal-compliance.ts`. A user who blacklists
+"Meat" as a whole group will correctly exclude a meal containing a raw
+beef *ingredient*, but not (yet) one containing a branded meat *product*.
+Also, since Ingredient-tier data was deliberately imported as raw/base
+forms only (see D8), a preparation-qualified rule like "chicken, fried"
+can only be checked against the *meal's own text* (name/description/
+steps) naming that preparation — there's no per-component "how this was
+cooked in this meal" field. Both are real, documented limitations, not
+oversights; either could become a real M6+ follow-up if it matters in
+practice.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -266,14 +300,38 @@ the start; `requireProfileId()` in `exclusion-actions.ts` upserts one
 defensively for any account that predates this (there shouldn't be any
 in practice, but costs nothing to be safe).
 
+**Meal generation**: `src/lib/meal-compliance.ts` (pure — `isMealCompliant`,
+`componentMatchesRule`, `isInGroupOrDescendant`, unit-tested) is the
+safety-facing core. `src/lib/generation-queries.ts` fetches candidate
+meals (optionally filtered by type/effort tag), maps each into the plain
+shape `meal-compliance.ts` expects, filters by the caller's exclusion
+rules, computes nutrition totals for the survivors via the same
+`computeMealTotals` M3 already built, and picks one at random — the
+random pick lives here rather than in the page component specifically
+because calling `Math.random()` inside a Server Component's render body
+trips `react-hooks/purity`. `/meals/generate` is a thin presentation
+layer over that: reads `type`/`effort` from `searchParams`, renders the
+filter form (plain GET, no client JS needed), and shows the picked meal
+or one of two distinct empty-state messages (no candidates at all vs.
+candidates but none compliant).
+
 ## Next steps and open questions
 
-- Next: M5 — meal generation that actually applies a profile's
-  exclusion rules (group/item/preparation) to suggest meals.
+- Next: M6 — the real Terms & Conditions (replacing the `/about` stub),
+  a dedicated mobile-viewport pass across every page, and the project's
+  first Playwright e2e specs (Vitest-only so far).
 - Open: the Owner should populate `/admin/meals` with real content
-  whenever convenient — not blocking M4/M5's own mechanics, but M5's
-  generation logic needs a non-trivial number of real meals to be
-  meaningfully testable end to end.
+  whenever convenient. M5 itself was fully verified without permanent
+  seed data (throwaway test meals, deleted afterward — see GOALS.md), but
+  the app obviously needs real meals before it's useful to an actual user.
+- Open (D13): is "respects your exclusion list" the right scope for
+  "balanced," or did the Owner want an actual nutrition-target scoring
+  system? Worth confirming explicitly rather than assuming the narrower
+  reading is final.
+- Open (D13): group-based exclusion rules don't yet cover Product-tier
+  components (no `foodGroupId` on `Product`) — revisit if this turns out
+  to matter once real meals include branded products in group-relevant
+  categories (e.g. a packaged meat product).
 - Open: final product name/domain (currently just the `arfid-meals`
   codename) — not blocking engineering, but needed before any deploy step.
 - Open: what "balanced" means precisely for meal generation (M5) — likely

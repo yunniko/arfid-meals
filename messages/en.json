@@ -15,6 +15,7 @@
     "ingredients": "Ingredients",
     "products": "Products",
     "meals": "Meals",
+    "generate": "Generate",
     "profile": "Profile",
     "admin": "Admin"
   },
@@ -52,6 +53,19 @@
     "subheading": "Branded products available in Czechia, sourced from Open Food Facts.",
     "attribution": "Product data from Open Food Facts, available under the Open Database License (ODbL).",
     "backLink": "Back to products"
+  },
+  "Generate": {
+    "heading": "Generate a meal",
+    "subheading": "Picks something from the meal database that fits your black/white list. This does not check whether it fits any specific nutrition target for your day — check the numbers yourself.",
+    "typeLabel": "Meal type",
+    "effortLabel": "Effort",
+    "anyOption": "Any",
+    "submit": "Generate",
+    "tryAnother": "Try another",
+    "matchSummary": "{compliant} of {total} meals in the database fit your list.",
+    "noMeals": "There are no meals in the database yet.",
+    "noMatches": "None of the {total} meals in the database fit your current list. Try loosening your filters, or check your profile's exclusion rules.",
+    "viewDetails": "View full details"
   },
   "Profile": {
     "heading": "Your profile",

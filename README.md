@@ -11,16 +11,17 @@ user can trust.
 
 ## Status
 
-M1-M4 done: app scaffold, database schema, email/password auth, cs/en
+M1-M5 done: app scaffold, database schema, email/password auth, cs/en
 i18n, a starter ingredient/product database (2,413 USDA ingredients, 493
 Czech Open Food Facts products, browsable at `/ingredients`/`/products`),
 a meal admin (`/admin/meals`, `Role.ADMIN`-gated) with public `/meals`
-browse pages, and user profiles with black/white exclusion lists at
-group/food/preparation granularity (`/profile`). The meals table itself
-is empty — real meal content is Owner-authored work via the admin UI,
-not something JulAI seeds (see HANDOVER D5/D11). See `GOALS.md` (G-001)
-for the full milestone plan and `HANDOVER.md` for architecture/decision
-notes.
+browse pages, user profiles with black/white exclusion lists at
+group/food/preparation granularity (`/profile`), and meal generation
+(`/meals/generate`) that respects those exclusion rules. The meals table
+itself is empty — real meal content is Owner-authored work via the admin
+UI, not something JulAI seeds (see HANDOVER D5/D11). See `GOALS.md`
+(G-001) for the full milestone plan and `HANDOVER.md` for architecture/
+decision notes.
 
 ## How to run
 

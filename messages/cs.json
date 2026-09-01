@@ -15,6 +15,7 @@
     "ingredients": "Suroviny",
     "products": "Produkty",
     "meals": "Jídla",
+    "generate": "Vygenerovat",
     "profile": "Profil",
     "admin": "Administrace"
   },
@@ -52,6 +53,19 @@
     "subheading": "Značkové produkty dostupné v Česku, zdroj: Open Food Facts.",
     "attribution": "Data o produktech pocházejí z Open Food Facts, dostupná pod licencí Open Database License (ODbL).",
     "backLink": "Zpět na produkty"
+  },
+  "Generate": {
+    "heading": "Vygenerovat jídlo",
+    "subheading": "Vybere něco z databáze jídel, co odpovídá vašemu černému/bílému seznamu. Nekontroluje, zda to odpovídá nějakému konkrétnímu nutričnímu cíli pro váš den — čísla si zkontrolujte sami.",
+    "typeLabel": "Typ jídla",
+    "effortLabel": "Náročnost",
+    "anyOption": "Libovolné",
+    "submit": "Vygenerovat",
+    "tryAnother": "Zkusit jiné",
+    "matchSummary": "{compliant} z {total} jídel v databázi odpovídá vašemu seznamu.",
+    "noMeals": "V databázi zatím nejsou žádná jídla.",
+    "noMatches": "Žádné z {total} jídel v databázi neodpovídá vašemu aktuálnímu seznamu. Zkuste uvolnit filtry nebo zkontrolovat pravidla ve svém profilu.",
+    "viewDetails": "Zobrazit podrobnosti"
   },
   "Profile": {
     "heading": "Váš profil",
