@@ -50,8 +50,8 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>
-          <div className="flex items-center justify-between px-4 py-2">
-            <nav className="flex gap-4 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
+            <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
               <Link href="/" className="hover:underline">
                 {tNav("home")}
               </Link>

@@ -223,13 +223,50 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       candidates case (an unrelated whitelist rule) both render their
       distinct, correct messages. `tsc`/`eslint`/`next build` clean,
       full Vitest suite green (29 tests).
-- [ ] M6 — Legal, polish & testing: Terms & Conditions with the
+- [x] M6 — Legal, polish & testing: Terms & Conditions with the
       safety-reevaluation disclaimer, visible per-item disclaimer marker,
       mobile-viewport pass across all pages, Vitest unit tests
       (exclusion-filtering, meal-generation logic) + Playwright e2e (core
-      flow), README/HANDOVER finalized.
+      flow), README/HANDOVER finalized. ✔ 2026-09-01. Real Terms of
+      Use/Privacy content replaces the `/about` stub (rendered from
+      `docs/legal/about-terms-privacy.md` via `marked`, same pattern as
+      listing-studio/when-we-meet) — covers what the Service is, the
+      "you must independently verify safety every time" disclaimer as
+      its own headline section (not buried in a numbered term), exactly
+      where ingredient/allergen data comes from and its real limitations,
+      what personal data is collected (explicitly naming that a
+      black/white list can reveal health-adjacent information even
+      though it isn't a medical record), and an honestly-disclosed gap
+      (no self-service account deletion yet). Operator identity and
+      contact (info@julienika.cz) confirmed with the Owner first, not
+      invented — see HANDOVER D14. First Playwright e2e suite: a real
+      cross-account core-flow spec (admin creates a meal → a different
+      user excludes its ingredient → generation correctly reports zero
+      matches) and a mobile-viewport regression spec (390px width, no
+      horizontal overflow) covering both public and authenticated pages.
+      The mobile spec caught a real bug — the site nav had no
+      `flex-wrap` and overflowed once enough authenticated-only links
+      (Generate/Profile/Admin) were present — fixed in `layout.tsx`.
+      Vitest unit tests unchanged in count here (M4/M5 already delivered
+      the exclusion-filtering/meal-generation tests this milestone asked
+      for). Full suite green: 29 Vitest + 9 Playwright; `tsc`/`eslint`/
+      `next build` clean.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-09-01 — **M6 done and verified — all six planned milestones are
+  now complete.** Real Terms of Use/Privacy page (docs/legal, `marked`,
+  Owner-confirmed contact/operator identity — HANDOVER D14), first
+  Playwright e2e suite (real cross-account core flow + mobile-viewport
+  regression), one real bug found and fixed by that new suite (nav
+  overflow on narrow screens once authenticated-only links appear). Full
+  suite green (29 Vitest + 9 Playwright), `tsc`/`eslint`/`next build`
+  clean. **This is the last milestone in the original plan — engineering
+  work is done, but per OPERATIONS.md's definition of done this goal
+  stays ACTIVE, not DONE, until the Owner reviews and signs off.** Open
+  items already logged for whenever work continues past this goal: real
+  meal content (D5/D11 — Owner's to author), the "balanced" vs.
+  "respects your list" scoping question (D13), and the Product-tier
+  group-exclusion gap (D13).
 - 2026-09-01 — **M5 done and verified.** Built `src/lib/meal-compliance.ts`
   (pure, 15 new unit tests) and `src/lib/generation-queries.ts` (Prisma
   wiring + random pick, moved out of the page component specifically

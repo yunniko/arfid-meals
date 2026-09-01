@@ -7,6 +7,12 @@
     "aboutLink": "About & Terms",
     "safetyDisclaimer": "Always double-check that an ingredient, product, or meal is actually safe for your own condition — this app cannot verify that for you."
   },
+  "About": {
+    "pageTitle": "About, Terms & Privacy",
+    "pageDescription": "What arfid-meals is, how it handles your data, and the terms of using it.",
+    "backHome": "Back to arfid-meals",
+    "draftBanner": "Draft for legal review — this document has not yet been approved by counsel and may change."
+  },
   "LocaleSwitcher": {
     "label": "Language"
   },

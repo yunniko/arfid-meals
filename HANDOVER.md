@@ -5,21 +5,29 @@ Read this before touching the project. Goal and milestone plan live in
 
 ## Current state
 
-M1-M5 are done and verified — see `GOALS.md` G-001 for the full record.
-Working: Next.js app scaffold, Prisma schema + migration, email/password
-auth, cs/en i18n, a starter ingredient/product database (2,413 USDA
-ingredients, 493 Czech Open Food Facts products), a meal admin (compose
-from ingredients/products, tags, steps, safety note) plus public meal
-browse/detail pages, user profiles with black/white exclusion lists
-(`/profile`), and now meal generation (`/meals/generate`) that filters
-by meal-type/effort tag and applies a profile's exclusion rules before
-picking one at random. The `meals` table is intentionally empty right
-now — see D11 — waiting on the Owner to populate it through
-`/admin/meals`; M5's generation logic was verified against real
-throwaway meals created and then deleted through that same UI, the same
-pattern M3 used. Not built yet: the real Terms & Conditions and a
-mobile-viewport/testing pass (M6 — `/about` is still a stub carrying
-just the safety disclaimer).
+All six of G-001's planned milestones (M1-M6) are done and verified —
+see `GOALS.md` for the full record. This goal stays **ACTIVE, not
+DONE**, pending explicit Owner sign-off (per OPERATIONS.md's definition
+of done), even though the engineering work is complete.
+
+Working end to end: Next.js app scaffold, Prisma schema + migration,
+email/password auth, cs/en i18n, a starter ingredient/product database
+(2,413 USDA ingredients, 493 Czech Open Food Facts products), a meal
+admin (`/admin/meals`, compose from ingredients/products, tags, steps,
+safety note) plus public meal browse/detail pages, user profiles with
+black/white exclusion lists (`/profile`), meal generation
+(`/meals/generate`) that respects those rules, and a real Terms of
+Use/Privacy page (`/about`) with the Owner's confirmed identity/contact.
+Test coverage: 29 Vitest unit tests (pure business logic — nutrition
+totals, allergen/gluten/lactose inference, exclusion compliance) and a
+first Playwright e2e suite (a real cross-account core flow, plus a
+mobile-viewport regression check).
+
+The `meals` table is intentionally empty — see D11 — waiting on the
+Owner to populate it through `/admin/meals`; every milestone that needed
+real meal data to verify (M3, M5, M6) used real throwaway meals created
+and then deleted through that same admin UI rather than permanent
+JulAI-authored seed content.
 
 ## How to run
 
@@ -222,6 +230,25 @@ cooked in this meal" field. Both are real, documented limitations, not
 oversights; either could become a real M6+ follow-up if it matters in
 practice.
 
+**D14 — Terms/Privacy operator identity and contact were confirmed with
+the Owner, not invented.** Before writing `docs/legal/about-terms-privacy.md`,
+JulAI asked which contact email to use rather than guessing; the Owner
+chose reusing `info@julienika.cz` (the same address already on
+when-we-meet's and listing-studio's legal pages). The operator-identity
+block (name, "private individual based in the Czech Republic, IČO
+pending") is copied verbatim from when-we-meet's own legal doc — same
+real operator, same portfolio, not a fresh invention. Two things this
+page deliberately does NOT assert, because they'd be guesses rather than
+Owner decisions: a minimum-age policy (the doc just says age isn't
+verified and a parent/guardian managing an account holds the same
+rights/responsibilities), and a finalized business registration address
+(marked as pending, matching when-we-meet's own doc). Revisit both
+before any real deployment. Also: like when-we-meet/listing-studio, only
+the page's chrome (title, back-link, draft banner) is translated into
+Czech — the legal body itself stays English-only, since translating
+legal text accurately is its own effort with its own accuracy risk, not
+something to bundle into a UI-string translation pass.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -315,15 +342,31 @@ filter form (plain GET, no client JS needed), and shows the picked meal
 or one of two distinct empty-state messages (no candidates at all vs.
 candidates but none compliant).
 
+**Legal doc & testing**: `docs/legal/about-terms-privacy.md` (markdown,
+source of truth) → `src/lib/legal.ts` (`legalDocHtml()`, reads the file
+and renders it via `marked`) → `/about` (adds the draft-banner UI and
+translated chrome around the rendered HTML). **Before any real deploy**,
+the Dockerfile (not written yet — no Dockerfile exists for this project
+yet, unlike listing-studio/when-we-meet) must copy `docs/legal/` into the
+runtime image alongside the build output, or the page will 404/500 in
+production — flagged here so it isn't missed when M6+ work turns to
+actually deploying this project. `playwright.config.ts` runs the app on
+a dedicated port (3100) so e2e never collides with a manually-running
+`npm run dev` on 3000; `tests/e2e/core-flow.spec.ts` and
+`mobile-viewport.spec.ts` both connect to Postgres directly via the `pg`
+package rather than the app's generated Prisma client, because Prisma
+7's client output is ESM-only (`import.meta`) and Playwright's test
+transform is CJS-based — trying to import `@/lib/prisma` (or the
+generated client directly) from an e2e spec fails at load time. Both
+specs create uniquely-named fixtures (timestamp-suffixed emails/ids) and
+delete them in `afterAll`, verified by hand to leave zero rows behind
+across repeated runs.
+
 ## Next steps and open questions
 
-- Next: M6 — the real Terms & Conditions (replacing the `/about` stub),
-  a dedicated mobile-viewport pass across every page, and the project's
-  first Playwright e2e specs (Vitest-only so far).
 - Open: the Owner should populate `/admin/meals` with real content
-  whenever convenient. M5 itself was fully verified without permanent
-  seed data (throwaway test meals, deleted afterward — see GOALS.md), but
-  the app obviously needs real meals before it's useful to an actual user.
+  whenever convenient — the app is functionally complete but has no real
+  meals to show a real user yet.
 - Open (D13): is "respects your exclusion list" the right scope for
   "balanced," or did the Owner want an actual nutrition-target scoring
   system? Worth confirming explicitly rather than assuming the narrower
@@ -332,6 +375,17 @@ candidates but none compliant).
   components (no `foodGroupId` on `Product`) — revisit if this turns out
   to matter once real meals include branded products in group-relevant
   categories (e.g. a packaged meat product).
+- Open (D14): finalize the operator's business registration address and
+  any minimum-age policy before a real deploy — both are placeholders by
+  design, not oversights.
+- Open: no Dockerfile/deploy setup exists for this project yet. When
+  that work starts, follow COMPANY/INFRASTRUCTURE.md's deployment
+  pattern (same shape as listing-studio/when-we-meet) and don't forget
+  `docs/legal/` needs to ship in the image (see above).
+- Open: self-service account deletion/data export doesn't exist yet —
+  disclosed honestly in the Terms/Privacy page as a known gap rather than
+  silently omitted; worth a real feature at some point rather than
+  staying a manual (`info@julienika.cz`) process indefinitely.
 - Open: final product name/domain (currently just the `arfid-meals`
   codename) — not blocking engineering, but needed before any deploy step.
 - Open: what "balanced" means precisely for meal generation (M5) — likely

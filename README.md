@@ -11,17 +11,19 @@ user can trust.
 
 ## Status
 
-M1-M5 done: app scaffold, database schema, email/password auth, cs/en
-i18n, a starter ingredient/product database (2,413 USDA ingredients, 493
-Czech Open Food Facts products, browsable at `/ingredients`/`/products`),
-a meal admin (`/admin/meals`, `Role.ADMIN`-gated) with public `/meals`
-browse pages, user profiles with black/white exclusion lists at
-group/food/preparation granularity (`/profile`), and meal generation
-(`/meals/generate`) that respects those exclusion rules. The meals table
-itself is empty — real meal content is Owner-authored work via the admin
-UI, not something JulAI seeds (see HANDOVER D5/D11). See `GOALS.md`
-(G-001) for the full milestone plan and `HANDOVER.md` for architecture/
-decision notes.
+All six planned milestones (M1-M6) are functionally complete: app
+scaffold, database schema, email/password auth, cs/en i18n, a starter
+ingredient/product database (2,413 USDA ingredients, 493 Czech Open Food
+Facts products, browsable at `/ingredients`/`/products`), a meal admin
+(`/admin/meals`, `Role.ADMIN`-gated) with public `/meals` browse pages,
+user profiles with black/white exclusion lists at group/food/preparation
+granularity (`/profile`), meal generation (`/meals/generate`) that
+respects those exclusion rules, and a real Terms of Use/Privacy page
+(`/about`). The meals table itself is empty — real meal content is
+Owner-authored work via the admin UI, not something JulAI seeds (see
+HANDOVER D5/D11). Awaiting Owner sign-off per the charter's definition of
+done. See `GOALS.md` (G-001) for the full milestone plan and
+`HANDOVER.md` for architecture/decision notes.
 
 ## How to run
 
@@ -32,7 +34,10 @@ decision notes.
    ingredient/product data (takes a few minutes; downloads ~200MB once)
 5. `npm run dev` — app at http://localhost:3000
 
-See `HANDOVER.md` for the `ADMIN_EMAIL` admin-bootstrap note and more detail.
+Run tests with `npm run test:unit` (Vitest) or `npm run test:e2e`
+(Playwright — starts its own dev server on port 3100; needs the database
+running first). See `HANDOVER.md` for the `ADMIN_EMAIL` admin-bootstrap
+note and more detail.
 
 ## Stack
 

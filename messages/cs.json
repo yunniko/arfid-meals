@@ -7,6 +7,12 @@
     "aboutLink": "O aplikaci a podmínky",
     "safetyDisclaimer": "Vždy si sami ověřte, že je daná surovina, produkt nebo jídlo skutečně bezpečné pro váš konkrétní stav — aplikace to za vás nedokáže ověřit."
   },
+  "About": {
+    "pageTitle": "O aplikaci, podmínky a ochrana soukromí",
+    "pageDescription": "Co je arfid-meals, jak nakládá s vašimi daty a za jakých podmínek ji lze používat.",
+    "backHome": "Zpět na arfid-meals",
+    "draftBanner": "Návrh k právní kontrole — tento dokument dosud nebyl schválen právníkem a může se změnit."
+  },
   "LocaleSwitcher": {
     "label": "Jazyk"
   },
