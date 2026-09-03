@@ -16,11 +16,52 @@ services:
       timeout: 3s
       retries: 10
 
-  # Production-style app/migrate services (matching listing-studio/
-  # when-we-meet's `--profile app` deploy pattern, see
-  # COMPANY/INFRASTRUCTURE.md) will be added together with a Dockerfile
-  # once this project is actually ready to deploy — not needed for local
-  # dev, which stays `docker compose up -d db` + `npm run dev`.
+  # Production-style app container — opt in with:
+  #   docker compose --profile app up -d --build
+  # (dev flow stays `docker compose up -d db` + `npm run dev`)
+
+  # One-shot migration runner (full node_modules from the build stage)
+  migrate:
+    profiles: ["app"]
+    build:
+      context: .
+      target: build
+    command: npx prisma migrate deploy
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://arfid:arfid@db:5432/arfid_meals
+
+  app:
+    profiles: ["app"]
+    build: .
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://arfid:arfid@db:5432/arfid_meals
+      # Interpolated from .env in this directory (or the shell environment)
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      # Empty AUTH_URL breaks Auth.js host trust (it treats "" as
+      # configured), so default to the local deploy URL; a real
+      # deployment sets APP_URL.
+      AUTH_URL: ${APP_URL:-http://localhost:30020}
+      AUTH_TRUST_HOST: "true"
+      APP_URL: ${APP_URL:-http://localhost:30020}
+      # First sign-in with this email is promoted to ADMIN (see
+      # src/auth.ts) — set once, then flip ADMIN_BOOTSTRAP_ENABLED to
+      # "false" once the real admin account exists.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_BOOTSTRAP_ENABLED: ${ADMIN_BOOTSTRAP_ENABLED:-true}
+    ports:
+      # Port 30020: next free slot after listing-studio (30000) and
+      # when-we-meet (30010) in COMPANY/INFRASTRUCTURE.md's registry —
+      # re-verify it's actually free on the live host before deploying,
+      # that doc is a snapshot, not a guarantee.
+      - "127.0.0.1:30020:3000"
 
 volumes:
   db-data:

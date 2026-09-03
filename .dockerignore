@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.data
+test-results
+playwright-report
+.env
+.env.*
+Dockerfile
+docker-compose.yml

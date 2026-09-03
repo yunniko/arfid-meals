@@ -44,6 +44,13 @@ account that should get admin/recipe-authoring access, per D1 in `src/auth.ts`.
 To (re-)populate the ingredient/product database: `npm run import:all`
 (runs the taxonomy seed, then both importers — see D8/D9 below). Both
 importers are idempotent (upsert by `fdcId`/`barcode`), safe to re-run.
+
+To build and run the production image **locally** (not a real deploy —
+see D15): `docker compose --profile app up -d --build`, app at
+http://127.0.0.1:30020. `AUTH_SECRET` must be set in `.env` first. Tear
+down with `docker compose --profile app stop app migrate && docker
+compose --profile app rm -f app migrate` (leaves `db` running for normal
+dev).
 The USDA dataset (~210MB unzipped) is cached in `.data/fdc/` after the
 first run (gitignored — never commit it) so re-imports don't re-download it.
 
@@ -249,6 +256,22 @@ Czech — the legal body itself stays English-only, since translating
 legal text accurately is its own effort with its own accuracy risk, not
 something to bundle into a UI-string translation pass.
 
+**D15 — Deploy config (Dockerfile, docker-compose `app`/`migrate`
+services) was built and locally verified, but the project has not been
+deployed.** Per VALUES.md's Restraint principle, nothing leaves the
+workspace without explicit Owner approval — building and running the
+production image *locally* is safe (fully reversible, nothing pushed or
+exposed), so that part was done proactively. Actually deploying to the
+shared VPS (pushing to GitHub, SSH-ing in, the root-owned nginx vhost +
+TLS cert steps) was not attempted and needs an explicit go-ahead first,
+per OPERATIONS.md's standing escalation rule for anything leaving the
+workspace. Port `30020` was picked as the next free slot after
+listing-studio (30000) and when-we-meet (30010) per
+COMPANY/INFRASTRUCTURE.md's registry — that doc is itself a snapshot, so
+its own instructions to re-verify freeness on the live host before
+actually deploying still apply; picking the number now didn't require
+checking a host this project isn't on yet.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -345,12 +368,13 @@ candidates but none compliant).
 **Legal doc & testing**: `docs/legal/about-terms-privacy.md` (markdown,
 source of truth) → `src/lib/legal.ts` (`legalDocHtml()`, reads the file
 and renders it via `marked`) → `/about` (adds the draft-banner UI and
-translated chrome around the rendered HTML). **Before any real deploy**,
-the Dockerfile (not written yet — no Dockerfile exists for this project
-yet, unlike listing-studio/when-we-meet) must copy `docs/legal/` into the
-runtime image alongside the build output, or the page will 404/500 in
-production — flagged here so it isn't missed when M6+ work turns to
-actually deploying this project. `playwright.config.ts` runs the app on
+translated chrome around the rendered HTML). The `Dockerfile` copies
+`docs/legal/` into the runtime image alongside the build output — copied
+verbatim from when-we-meet's own Dockerfile (which solved this exact
+problem first) rather than re-derived; confirmed by actually building
+and running the image locally (`docker compose --profile app up -d
+--build`, then curling `/about` against the running container) rather
+than assumed correct from reading the Dockerfile. `playwright.config.ts` runs the app on
 a dedicated port (3100) so e2e never collides with a manually-running
 `npm run dev` on 3000; `tests/e2e/core-flow.spec.ts` and
 `mobile-viewport.spec.ts` both connect to Postgres directly via the `pg`
@@ -378,10 +402,11 @@ across repeated runs.
 - Open (D14): finalize the operator's business registration address and
   any minimum-age policy before a real deploy — both are placeholders by
   design, not oversights.
-- Open: no Dockerfile/deploy setup exists for this project yet. When
-  that work starts, follow COMPANY/INFRASTRUCTURE.md's deployment
-  pattern (same shape as listing-studio/when-we-meet) and don't forget
-  `docs/legal/` needs to ship in the image (see above).
+- Open: deploy config exists and was verified locally (D15), but nothing
+  has been deployed. Actually putting this live needs an explicit Owner
+  go-ahead (GitHub push destination, confirming the domain/subdomain,
+  and the root-owned nginx vhost + TLS steps the Owner runs directly per
+  COMPANY/INFRASTRUCTURE.md) — not something to do unprompted.
 - Open: self-service account deletion/data export doesn't exist yet —
   disclosed honestly in the Terms/Privacy page as a known gap rather than
   silently omitted; worth a real feature at some point rather than
