@@ -1,74 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { addExclusionRuleAction, type ActionState } from "@/lib/exclusion-actions";
+import { SearchCombobox, type SearchResult } from "@/components/search-combobox";
 
 type Kind = "ingredient" | "product";
-type SearchResult = { id: string; name: string; brand?: string | null };
 type Selected = { kind: Kind; id: string; name: string };
-
-function useDebouncedSearch(kind: Kind, query: string) {
-  const [results, setResults] = useState<SearchResult[]>([]);
-  useEffect(() => {
-    if (!query.trim()) return;
-    let cancelled = false;
-    const handle = setTimeout(async () => {
-      const res = await fetch(`/api/search/${kind}s?q=${encodeURIComponent(query)}`);
-      if (res.ok && !cancelled) setResults(await res.json());
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [kind, query]);
-  return query.trim() ? results : [];
-}
-
-function SearchColumn({
-  kind,
-  label,
-  onPick,
-}: {
-  kind: Kind;
-  label: string;
-  onPick: (selected: Selected) => void;
-}) {
-  const t = useTranslations("Profile");
-  const [query, setQuery] = useState("");
-  const results = useDebouncedSearch(kind, query);
-  return (
-    <div>
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-black/60 dark:text-white/60">
-        {label}
-      </h4>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={t("itemSearchPlaceholder")}
-        className="mt-1 w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
-      />
-      {results.length > 0 && (
-        <ul className="mt-1 max-h-40 overflow-auto rounded-md border border-black/10 dark:border-white/10">
-          {results.map((r) => (
-            <li key={r.id}>
-              <button
-                type="button"
-                onClick={() => onPick({ kind, id: r.id, name: r.name })}
-                className="block w-full px-3 py-1.5 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                {r.name}
-                {r.brand ? ` — ${r.brand}` : ""}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export function ItemRuleForm() {
   const t = useTranslations("Profile");
@@ -77,6 +16,10 @@ export function ItemRuleForm() {
     {},
   );
   const [selected, setSelected] = useState<Selected | null>(null);
+
+  function pick(kind: Kind, result: SearchResult) {
+    setSelected({ kind, id: result.id, name: result.name });
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
@@ -112,8 +55,16 @@ export function ItemRuleForm() {
           </div>
         ) : (
           <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <SearchColumn kind="ingredient" label={t("itemLabel")} onPick={setSelected} />
-            <SearchColumn kind="product" label={t("itemLabel")} onPick={setSelected} />
+            <SearchCombobox
+              kind="ingredient"
+              placeholder={t("itemSearchPlaceholder")}
+              onSelect={(r) => pick("ingredient", r)}
+            />
+            <SearchCombobox
+              kind="product"
+              placeholder={t("itemSearchPlaceholder")}
+              onSelect={(r) => pick("product", r)}
+            />
           </div>
         )}
       </div>

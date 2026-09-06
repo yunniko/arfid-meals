@@ -1,72 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { SearchCombobox, type SearchResult } from "@/components/search-combobox";
 
 type Kind = "ingredient" | "product";
 type SelectedComponent = { kind: Kind; id: string; name: string; quantityG: number };
-type SearchResult = { id: string; name: string; brand?: string | null };
-
-function useDebouncedSearch(kind: Kind, query: string) {
-  const [results, setResults] = useState<SearchResult[]>([]);
-  useEffect(() => {
-    if (!query.trim()) return;
-    let cancelled = false;
-    const handle = setTimeout(async () => {
-      const res = await fetch(`/api/search/${kind}s?q=${encodeURIComponent(query)}`);
-      if (res.ok && !cancelled) setResults(await res.json());
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [kind, query]);
-  // Query cleared -> show nothing without a synchronous setState-in-effect
-  // (the stale `results` state is simply not rendered in that case).
-  return query.trim() ? results : [];
-}
-
-function PickerColumn({
-  kind,
-  heading,
-  onAdd,
-}: {
-  kind: Kind;
-  heading: string;
-  onAdd: (kind: Kind, result: SearchResult) => void;
-}) {
-  const t = useTranslations("Admin.meals.form");
-  const [query, setQuery] = useState("");
-  const results = useDebouncedSearch(kind, query);
-  return (
-    <div>
-      <h3 className="text-sm font-semibold">{heading}</h3>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={t("componentSearchPlaceholder")}
-        className="mt-1 w-full rounded-md border border-black/15 px-3 py-2 text-sm dark:border-white/15 dark:bg-black"
-      />
-      {results.length > 0 && (
-        <ul className="mt-1 max-h-40 overflow-auto rounded-md border border-black/10 dark:border-white/10">
-          {results.map((r) => (
-            <li key={r.id}>
-              <button
-                type="button"
-                onClick={() => onAdd(kind, r)}
-                className="block w-full px-3 py-1.5 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                {r.name}
-                {r.brand ? ` — ${r.brand}` : ""}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export function ComponentPicker({ initial }: { initial: SelectedComponent[] }) {
   const t = useTranslations("Admin.meals.form");
@@ -89,8 +28,26 @@ export function ComponentPicker({ initial }: { initial: SelectedComponent[] }) {
     <div>
       <input type="hidden" name="components" value={JSON.stringify(selected)} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <PickerColumn kind="ingredient" heading={t("ingredientsHeading")} onAdd={addComponent} />
-        <PickerColumn kind="product" heading={t("productsHeading")} onAdd={addComponent} />
+        <div>
+          <h3 className="text-sm font-semibold">{t("ingredientsHeading")}</h3>
+          <div className="mt-1">
+            <SearchCombobox
+              kind="ingredient"
+              placeholder={t("componentSearchPlaceholder")}
+              onSelect={(r) => addComponent("ingredient", r)}
+            />
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold">{t("productsHeading")}</h3>
+          <div className="mt-1">
+            <SearchCombobox
+              kind="product"
+              placeholder={t("componentSearchPlaceholder")}
+              onSelect={(r) => addComponent("product", r)}
+            />
+          </div>
+        </div>
       </div>
       <h3 className="mt-4 text-sm font-semibold">{t("selectedHeading")}</h3>
       {selected.length === 0 ? (
