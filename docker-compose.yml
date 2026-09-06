@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: arfid
       POSTGRES_DB: arfid_meals
     ports:
-      - "127.0.0.1:54322:5432"
+      - "127.0.0.1:54323:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -48,20 +48,19 @@ services:
       # Empty AUTH_URL breaks Auth.js host trust (it treats "" as
       # configured), so default to the local deploy URL; a real
       # deployment sets APP_URL.
-      AUTH_URL: ${APP_URL:-http://localhost:30020}
+      AUTH_URL: ${APP_URL:-http://localhost:30030}
       AUTH_TRUST_HOST: "true"
-      APP_URL: ${APP_URL:-http://localhost:30020}
+      APP_URL: ${APP_URL:-http://localhost:30030}
       # First sign-in with this email is promoted to ADMIN (see
       # src/auth.ts) — set once, then flip ADMIN_BOOTSTRAP_ENABLED to
       # "false" once the real admin account exists.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_BOOTSTRAP_ENABLED: ${ADMIN_BOOTSTRAP_ENABLED:-true}
     ports:
-      # Port 30020: next free slot after listing-studio (30000) and
-      # when-we-meet (30010) in COMPANY/INFRASTRUCTURE.md's registry —
-      # re-verify it's actually free on the live host before deploying,
-      # that doc is a snapshot, not a guarantee.
-      - "127.0.0.1:30020:3000"
+      # Port 30030: verified free on the live host 2026-09-03 (30000,
+      # 30010, and 30020 were already taken — 30020 by crochet-simulator,
+      # not reflected in COMPANY/INFRASTRUCTURE.md's registry snapshot).
+      - "127.0.0.1:30030:3000"
 
 volumes:
   db-data:
