@@ -59,7 +59,7 @@ services:
     ports:
       # Port 30030: verified free on the live host 2026-09-03 (30000,
       # 30010, and 30020 were already taken — 30020 by crochet-simulator,
-      # not reflected in COMPANY/INFRASTRUCTURE.md's registry snapshot).
+      # not reflected in COMPANY/INFRASTRUCTURE_DEPLOY.md's registry snapshot).
       - "127.0.0.1:30030:3000"
 
 volumes:

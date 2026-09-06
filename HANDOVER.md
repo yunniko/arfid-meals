@@ -5,10 +5,12 @@ Read this before touching the project. Goal and milestone plan live in
 
 ## Current state
 
-All six of G-001's planned milestones (M1-M6) are done and verified —
-see `GOALS.md` for the full record. This goal stays **ACTIVE, not
-DONE**, pending explicit Owner sign-off (per OPERATIONS.md's definition
-of done), even though the engineering work is complete.
+All six of G-001's planned milestones (M1-M6) are done and verified, and
+the app is now **live at https://arfid.julienika.cz** (deployed
+2026-09-06 — see D16). This goal stays **ACTIVE, not DONE** in `GOALS.md`
+pending explicit Owner sign-off (per OPERATIONS.md's definition of done),
+even though the engineering work is complete and now actually running in
+production.
 
 Working end to end: Next.js app scaffold, Prisma schema + migration,
 email/password auth, cs/en i18n, a starter ingredient/product database
@@ -31,7 +33,8 @@ JulAI-authored seed content.
 
 ## How to run
 
-1. `docker compose up -d db` — starts local Postgres (port 54322).
+1. `docker compose up -d db` — starts local Postgres (port 54323 — moved
+   from 54322 after a live-host port collision, see D15).
 2. `npm install`
 3. `npx prisma migrate dev` — applies the schema (already applied once;
    re-run after pulling schema changes).
@@ -45,12 +48,12 @@ To (re-)populate the ingredient/product database: `npm run import:all`
 (runs the taxonomy seed, then both importers — see D8/D9 below). Both
 importers are idempotent (upsert by `fdcId`/`barcode`), safe to re-run.
 
-To build and run the production image **locally** (not a real deploy —
-see D15): `docker compose --profile app up -d --build`, app at
-http://127.0.0.1:30020. `AUTH_SECRET` must be set in `.env` first. Tear
-down with `docker compose --profile app stop app migrate && docker
-compose --profile app rm -f app migrate` (leaves `db` running for normal
-dev).
+To build and run the production image **locally**: `docker compose
+--profile app up -d --build`, app at http://127.0.0.1:30030.
+`AUTH_SECRET` must be set in `.env` first. Tear down with `docker compose
+--profile app stop app migrate && docker compose --profile app rm -f app
+migrate` (leaves `db` running for normal dev). This is now also exactly
+how the real production container runs — see D16 for the actual deploy.
 The USDA dataset (~210MB unzipped) is cached in `.data/fdc/` after the
 first run (gitignored — never commit it) so re-imports don't re-download it.
 
@@ -257,20 +260,59 @@ legal text accurately is its own effort with its own accuracy risk, not
 something to bundle into a UI-string translation pass.
 
 **D15 — Deploy config (Dockerfile, docker-compose `app`/`migrate`
-services) was built and locally verified, but the project has not been
-deployed.** Per VALUES.md's Restraint principle, nothing leaves the
+services) was built and locally verified before any real deploy was
+attempted.** Per VALUES.md's Restraint principle, nothing leaves the
 workspace without explicit Owner approval — building and running the
 production image *locally* is safe (fully reversible, nothing pushed or
-exposed), so that part was done proactively. Actually deploying to the
-shared VPS (pushing to GitHub, SSH-ing in, the root-owned nginx vhost +
-TLS cert steps) was not attempted and needs an explicit go-ahead first,
-per OPERATIONS.md's standing escalation rule for anything leaving the
-workspace. Port `30020` was picked as the next free slot after
-listing-studio (30000) and when-we-meet (30010) per
-COMPANY/INFRASTRUCTURE.md's registry — that doc is itself a snapshot, so
-its own instructions to re-verify freeness on the live host before
-actually deploying still apply; picking the number now didn't require
-checking a host this project isn't on yet.
+exposed), so that part was done proactively; pushing to GitHub and
+deploying to the shared VPS waited for an explicit go-ahead (see D16).
+Port `30020` (and Postgres `54322`) was the first pick — next free slot
+after listing-studio/when-we-meet per COMPANY/INFRASTRUCTURE_DEPLOY.md's
+registry — but a live-host check before deploying found both **already
+taken** by `crochet-simulator`, which the registry didn't yet list. Moved
+to `30030`/`54323`, confirmed genuinely free. Exactly the scenario that
+doc's own "never trust a cached port" warning exists for.
+
+**D16 — Deployed to `arfid.julienika.cz` 2026-09-06, Owner-directed.**
+Real production deploy, not a drill: pushed to a new public GitHub repo
+(`yunniko/arfid-meals` — commit author emails rewritten to the account's
+GitHub noreply address first, same `GH007` email-privacy fix
+when-we-meet hit), cloned to `/var/www/repositories/arfid-meals`, `.env`
+written server-side (`APP_URL`, a freshly-generated `AUTH_SECRET`,
+`ADMIN_EMAIL=info@julienika.cz` — the Owner's choice, not invented), then
+`docker compose --profile app up -d --build`. The nginx vhost + TLS cert
+step went through a real back-and-forth with the Owner about *how* to
+grant that one root-requiring step without full `sudo` — landed on a
+single validated script (`/usr/local/sbin/julai-deploy-vhost`, refuses
+non-hostname input, refuses to overwrite an existing vhost, not scoped to
+specific domains since DNS itself stays entirely with the Owner) plus one
+sudoers line, recorded in `COMPANY/INFRASTRUCTURE.md` and
+`INFRASTRUCTURE_DEPLOY.md` since it's reusable for every future project's
+first deploy, not just this one. **Known follow-up, not blocking**: the
+version actually applied on the server predates the log-directory-
+creation line being folded into the script (see
+`INFRASTRUCTURE_DEPLOY.md` step 5's logging note) — `nginx -t`/reload
+did NOT fail without it (useful new data point: missing per-site log dirs
+aren't fatal to nginx the way originally assumed), but
+`/var/log/nginx/arfid.julienika.cz/` doesn't exist, so this site's
+requests likely aren't being access-logged yet. Fix: `sudo install -d -m
+755 -o www-data -g adm /var/log/nginx/arfid.julienika.cz` once, or update
+the deployed script to match the documented version.
+
+Verified live, not just "curl returns 200": production database seeded
+for real (`seed-taxonomy`, `import-ingredients`, `import-products` run
+via `docker compose run --rm migrate npx tsx ...`, since the slim runtime
+image doesn't carry dev tooling/scripts — 2,413 ingredients + 493
+products confirmed browsable on the live site), a full register → auto
+sign-in → profile → exclusion-rule → generate-meal pass driven in a real
+browser against the live HTTPS URL, the Terms/Privacy page's real
+content confirmed rendering, and every other site/container on the
+shared host confirmed unaffected (unchanged uptimes, all still returning
+200) both immediately after the app deploy and after the data import.
+Test account (`deploy-verify@example.com`) deleted from the production
+database afterward — the real admin account is the Owner's own to create
+by registering `info@julienika.cz` with a password of their choosing;
+JulAI never invents or sees that password.
 
 ## How things fit together
 
@@ -406,7 +448,7 @@ across repeated runs.
   has been deployed. Actually putting this live needs an explicit Owner
   go-ahead (GitHub push destination, confirming the domain/subdomain,
   and the root-owned nginx vhost + TLS steps the Owner runs directly per
-  COMPANY/INFRASTRUCTURE.md) — not something to do unprompted.
+  COMPANY/INFRASTRUCTURE_DEPLOY.md) — not something to do unprompted.
 - Open: self-service account deletion/data export doesn't exist yet —
   disclosed honestly in the Terms/Privacy page as a known gap rather than
   silently omitted; worth a real feature at some point rather than

@@ -7,22 +7,26 @@ market-product database, and a hand-authored meal/recipe database, filtered
 through each user's own black/white exclusion list, to generate meals the
 user can trust.
 
-`arfid-meals` is a working codename, not a finalized product name/domain.
+`arfid-meals` is a working codename — live at **https://arfid.julienika.cz**,
+but not necessarily the finalized public product name.
 
 ## Status
 
-All six planned milestones (M1-M6) are functionally complete: app
-scaffold, database schema, email/password auth, cs/en i18n, a starter
-ingredient/product database (2,413 USDA ingredients, 493 Czech Open Food
-Facts products, browsable at `/ingredients`/`/products`), a meal admin
-(`/admin/meals`, `Role.ADMIN`-gated) with public `/meals` browse pages,
-user profiles with black/white exclusion lists at group/food/preparation
-granularity (`/profile`), meal generation (`/meals/generate`) that
-respects those exclusion rules, and a real Terms of Use/Privacy page
-(`/about`). The meals table itself is empty — real meal content is
-Owner-authored work via the admin UI, not something JulAI seeds (see
-HANDOVER D5/D11). Awaiting Owner sign-off per the charter's definition of
-done. See `GOALS.md` (G-001) for the full milestone plan and
+**Live in production** at https://arfid.julienika.cz (deployed
+2026-09-06). All six planned milestones (M1-M6) are functionally
+complete: app scaffold, database schema, email/password auth, cs/en
+i18n, a starter ingredient/product database (2,413 USDA ingredients, 493
+Czech Open Food Facts products, browsable at `/ingredients`/`/products`),
+a meal admin (`/admin/meals`, `Role.ADMIN`-gated) with public `/meals`
+browse pages, user profiles with black/white exclusion lists at
+group/food/preparation granularity (`/profile`), meal generation
+(`/meals/generate`) that respects those exclusion rules, and a real Terms
+of Use/Privacy page (`/about`). The meals table itself is empty — real
+meal content is Owner-authored work via the admin UI, not something
+JulAI seeds (see HANDOVER D5/D11). The engineering goal (G-001) is
+functionally complete but awaiting explicit Owner sign-off per the
+charter's definition of done. See `GOALS.md` (G-001) for the full
+milestone plan and
 `HANDOVER.md` for architecture/decision notes.
 
 ## How to run

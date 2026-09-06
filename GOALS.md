@@ -253,6 +253,20 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       `next build` clean.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-09-06 — **Deployed to production, Owner-directed ("Deploy it to
+  arfid.julienika.cz").** Live at https://arfid.julienika.cz — see
+  HANDOVER D16 for the full record (GitHub push, server clone, `.env`,
+  Docker build, nginx vhost + TLS via a new Owner-approved sudo script,
+  production data import, and full live-browser verification of the
+  register → profile → exclusion-rule → generate-meal flow). Caught a
+  real port collision before it caused damage (D15) and fixed a gap in
+  the shared VPS's log rotation config as a side effect of this deploy
+  (unrelated nested per-site logs weren't being rotated at all — fixed
+  and confirmed, recorded in COMPANY/INFRASTRUCTURE_DEPLOY.md, not
+  specific to this project). G-001 is now live, not just built — still
+  left as **ACTIVE, not DONE** pending explicit Owner sign-off, per
+  OPERATIONS.md's definition of done, same pattern as when-we-meet's own
+  goal followed after its own deploy.
 - 2026-09-01 — **M6 done and verified — all six planned milestones are
   now complete.** Real Terms of Use/Privacy page (docs/legal, `marked`,
   Owner-confirmed contact/operator identity — HANDOVER D14), first
@@ -346,7 +360,7 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
   listing-studio's env-driven one, since there's no staged-rollout need
   here, see HANDOVER D7). Local Postgres via `docker compose up -d db`
   (port 54322, following the registry's per-project-port convention from
-  COMPANY/INFRASTRUCTURE.md, not yet a real deploy). Core schema covers
+  COMPANY/INFRASTRUCTURE_DEPLOY.md, not yet a real deploy). Core schema covers
   every entity named in the acceptance criteria; full detail in
   HANDOVER "How things fit together". Built minimal register/login pages
   and an `/about` stub carrying the safety disclaimer early, so the
