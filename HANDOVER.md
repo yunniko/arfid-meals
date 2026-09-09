@@ -12,10 +12,9 @@ pending explicit Owner sign-off (per OPERATIONS.md's definition of done),
 even though the engineering work is complete and now actually running in
 production.
 
-Two post-deploy fixes (D17, 2026-09-06; D18, 2026-09-09) are committed
-locally but not yet pushed or deployed — the live site still runs the
-pre-fix search combobox and the old flat ingredient list until the Owner
-asks for a redeploy.
+Two post-deploy fixes (D17, 2026-09-06 — search combobox; D18,
+2026-09-09 — ingredient variant tree + exclusion-rule "specific food"
+tier) are both live as of 2026-09-09's redeploy (see end of D18).
 
 Working end to end: Next.js app scaffold, Prisma schema + migration,
 email/password auth, cs/en i18n, an ingredient/product database (2,413
@@ -444,6 +443,21 @@ including the fixed regression. **Committed locally; not pushed to GitHub
 and not deployed** — same standing gap as D17: the live site still serves
 the old flat ingredient list and the old two-granularity exclusion form
 until the Owner asks for a redeploy.
+
+**Redeployed 2026-09-09, Owner-directed.** Pushed to GitHub (author/
+committer emails rewritten to the noreply address first — same GH007 fix
+as D16, this time also needed on the committer field, not just author),
+pulled on the server, `docker compose --profile app up -d --build`
+(migration applied cleanly), then `docker compose run --rm migrate npx
+tsx scripts/import-ingredients.ts` to backfill `IngredientGroup` rows
+against the real production ingredient data (2,413 ingredients re-upserted
+unchanged, 179 groups created — same count as the local dev database).
+This deploy also shipped D17's search-combobox fix, which had been
+sitting committed-but-undeployed since 2026-09-06. Verified live at
+https://arfid.julienika.cz: searching "milk" and "egg" both show the
+grouped tree exactly as verified locally. Confirmed every other container
+on the shared host kept its pre-deploy uptime unchanged — only
+`arfid-meals-app-1` restarted.
 
 ## How things fit together
 

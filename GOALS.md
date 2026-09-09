@@ -294,10 +294,13 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
   `.nth(1)` button index (now `.nth(2)`). 12 new Vitest unit tests
   (`slugify`: 3, `ingredient-grouping`: 5, 4 new `meal-compliance` cases),
   41/41 total; `tsc`/`eslint`/`next build` clean; 9/9 Playwright. See
-  HANDOVER D18 for the full design record. **Not pushed to GitHub or
-  deployed** — the live site at arfid.julienika.cz still runs the flat
-  ingredient list until the Owner asks for a redeploy (same standing gap
-  as D17's fix).
+  HANDOVER D18 for the full design record. **Redeployed to production
+  the same day (Owner-directed)** along with D17's previously-undeployed
+  search-combobox fix — pushed to GitHub, pulled + rebuilt on the server,
+  migration applied, `IngredientGroup` data backfilled against the real
+  production ingredients (179 groups, same as dev), verified live at
+  https://arfid.julienika.cz, every other site on the shared host
+  confirmed unaffected. See end of HANDOVER D18 for the deploy record.
 - 2026-09-06 — **Bug fix, Owner-reported: ingredient/product search
   combobox had no click feedback and didn't close on blur.** Fixed by
   extracting a shared `SearchCombobox` component and switching both the
