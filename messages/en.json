@@ -52,7 +52,9 @@
   "Ingredients": {
     "heading": "Ingredients",
     "subheading": "Generic raw foods with detailed nutrition, sourced from USDA FoodData Central (public domain).",
-    "backLink": "Back to ingredients"
+    "backLink": "Back to ingredients",
+    "groupSubheading": "Every USDA variant of this food.",
+    "variantsLabel": "{count, plural, one {# variant} other {# variants}}"
   },
   "Products": {
     "heading": "Products (Czechia)",
@@ -83,7 +85,9 @@
     "listTypeLabel": "List",
     "addGroupHeading": "Exclude/include a whole food group",
     "groupLabel": "Food group",
-    "addItemHeading": "Exclude/include a specific ingredient or product",
+    "addFoodHeading": "Exclude/include a specific food (covers every variant)",
+    "foodLabel": "Food",
+    "addItemHeading": "Exclude/include one exact ingredient variant or product",
     "itemLabel": "Ingredient or product",
     "itemSearchPlaceholder": "Search by name...",
     "changeButton": "Change",
@@ -95,6 +99,7 @@
     "errors": {
       "invalidListType": "Choose Blacklist or Whitelist.",
       "groupRequired": "Choose a food group.",
+      "foodRequired": "Choose a food.",
       "itemRequired": "Search for and select an ingredient or product first.",
       "unknown": "Something went wrong. Please try again."
     }

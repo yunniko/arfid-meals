@@ -15,6 +15,8 @@ import path from "node:path";
 import AdmZip from "adm-zip";
 import { prisma } from "../src/lib/prisma";
 import { inferAllergenSlugsFromName, inferContainsGluten, inferContainsLactose } from "../src/lib/food-heuristics";
+import { computeIngredientGroups } from "../src/lib/ingredient-grouping";
+import { slugify } from "../src/lib/slugify";
 
 const DATASET_URL =
   "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip";
@@ -173,6 +175,46 @@ async function main() {
   }
 
   console.log(`Imported ${imported} ingredients.`);
+
+  await assignIngredientGroups();
+}
+
+// Recomputes the variant-grouping tree (see IngredientGroup's schema comment
+// and HANDOVER D18) from every ingredient currently in the table — not just
+// the ones just imported — so this stays correct on repeat/partial runs.
+// Idempotent: upserts groups by their deterministic slug, and reconciles any
+// ingredient whose group membership changed since the last run (including
+// clearing groupId for a group that no longer has 2+ members).
+async function assignIngredientGroups() {
+  const allIngredients = await prisma.ingredient.findMany({
+    select: { id: true, name: true, ingredientGroupId: true },
+  });
+  const computed = computeIngredientGroups(allIngredients);
+
+  const desiredGroupIdByIngredientId = new Map<string, string>();
+  for (const { name, memberIds } of computed) {
+    const group = await prisma.ingredientGroup.upsert({
+      where: { slug: slugify(name) },
+      update: { name },
+      create: { slug: slugify(name), name },
+    });
+    for (const id of memberIds) desiredGroupIdByIngredientId.set(id, group.id);
+  }
+
+  let reassigned = 0;
+  for (const ingredient of allIngredients) {
+    const desired = desiredGroupIdByIngredientId.get(ingredient.id) ?? null;
+    if (ingredient.ingredientGroupId === desired) continue;
+    await prisma.ingredient.update({
+      where: { id: ingredient.id },
+      data: { ingredientGroupId: desired },
+    });
+    reassigned++;
+  }
+
+  console.log(
+    `Grouped ingredients into ${computed.length} variant groups (${desiredGroupIdByIngredientId.size} ingredients grouped, ${reassigned} group memberships changed this run).`,
+  );
 }
 
 main()

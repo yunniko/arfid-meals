@@ -88,7 +88,10 @@ test.describe("core flow", () => {
     const ingredientSearches = page.getByPlaceholder("Search by name...");
     await ingredientSearches.first().fill(TEST_INGREDIENT_NAME);
     await page.getByRole("button", { name: TEST_INGREDIENT_NAME }).click();
-    await page.getByRole("button", { name: "Add rule" }).nth(1).click();
+    // Three "Add rule" forms exist now (whole group / specific food /
+    // exact item — see IngredientGroup, HANDOVER D18); this exercises the
+    // third one, the exact-item form.
+    await page.getByRole("button", { name: "Add rule" }).nth(2).click();
     await expect(page.getByText(`Blacklist: ${TEST_INGREDIENT_NAME}`)).toBeVisible();
 
     // Generation must now correctly report zero compliant meals.

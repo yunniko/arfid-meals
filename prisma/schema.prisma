@@ -105,6 +105,28 @@ model FoodGroup {
   @@map("food_groups")
 }
 
+// Groups an Ingredient's real USDA variants under the specific food they all
+// are (e.g. "Milk" groups every USDA milk variant; "Chicken" groups every
+// USDA chicken cut/prep) — a second, finer-grained tree alongside FoodGroup's
+// broad taxonomy ("meat" vs "chicken, whole, raw, fresh" are different axes).
+// Derived automatically from each ingredient's own name: USDA's own naming
+// convention already encodes "food, descriptor, descriptor, ..." via commas,
+// so the group name is just an ingredient's first comma segment — a real,
+// reproducible property of the source data, not a hand-curated grouping (see
+// scripts/import-ingredients.ts and HANDOVER D18). Only created when 2+
+// ingredients actually share one; a name with no real variants stays
+// ungrouped rather than becoming a meaningless group of one.
+model IngredientGroup {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  ingredients    Ingredient[]
+  exclusionRules ExclusionRule[]
+
+  @@map("ingredient_groups")
+}
+
 // ---------------------------------------------------------------------------
 // Ingredient tier: generic raw foods, sourced from USDA FoodData Central.
 // Nutrition is per 100g, country-agnostic (see HANDOVER D2).
@@ -117,6 +139,10 @@ model Ingredient {
   fdcId        Int?    @unique
   foodGroupId  String?
   foodGroup    FoodGroup? @relation(fields: [foodGroupId], references: [id])
+  // The specific-food variant cluster this ingredient belongs to (see
+  // IngredientGroup above) — null if this ingredient has no real variants.
+  ingredientGroupId String?
+  ingredientGroup   IngredientGroup? @relation(fields: [ingredientGroupId], references: [id])
 
   // Per 100g. Nullable: not every FDC entry reports every nutrient.
   kcal          Float?
@@ -288,11 +314,16 @@ model UserProfile {
   @@map("user_profiles")
 }
 
-// One row per exclusion, at exactly one of three granularities:
-//   - foodGroupId set only  -> whole group (e.g. "meat")
-//   - ingredientId set only -> specific food, any preparation (e.g. "chicken")
-//   - ingredientId + preparation set -> specific preparation (e.g. "fried chicken")
-// productId mirrors the ingredient case for branded market products.
+// One row per exclusion, at exactly one of four granularities:
+//   - foodGroupId set only       -> whole broad category (e.g. "meat")
+//   - ingredientGroupId set      -> a specific food, every USDA variant of it
+//                                   (e.g. "chicken" — see IngredientGroup and
+//                                   HANDOVER D18), optionally + preparation
+//   - ingredientId set only      -> one exact USDA variant, any preparation
+//   - ingredientId + preparation -> that exact variant in a named preparation
+//                                   (e.g. "fried chicken breast")
+// productId mirrors the plain ingredientId case for branded market products
+// (there is no product-tier equivalent of IngredientGroup — see D13/D18).
 // `listType` says whether this rule blacklists or whitelists its target;
 // a profile normally uses one consistently, but the schema doesn't force it.
 model ExclusionRule {
@@ -303,12 +334,14 @@ model ExclusionRule {
 
   foodGroupId  String?
   foodGroup    FoodGroup?  @relation(fields: [foodGroupId], references: [id])
+  ingredientGroupId String?
+  ingredientGroup   IngredientGroup? @relation(fields: [ingredientGroupId], references: [id])
   ingredientId String?
   ingredient   Ingredient? @relation(fields: [ingredientId], references: [id])
   productId    String?
   product      Product?    @relation(fields: [productId], references: [id])
   // Free-text preparation qualifier (e.g. "fried"), only meaningful when
-  // ingredientId or productId is also set.
+  // ingredientGroupId, ingredientId, or productId is also set.
   preparation  String?
 
   createdAt DateTime @default(now())

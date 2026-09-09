@@ -5,7 +5,7 @@ export function getProfileWithRules(userId: string) {
     where: { userId },
     include: {
       exclusionRules: {
-        include: { foodGroup: true, ingredient: true, product: true },
+        include: { foodGroup: true, ingredientGroup: true, ingredient: true, product: true },
         orderBy: { createdAt: "desc" },
       },
     },

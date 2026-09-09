@@ -52,7 +52,9 @@
   "Ingredients": {
     "heading": "Suroviny",
     "subheading": "Obecné syrové potraviny s podrobnou nutriční hodnotou, zdroj: USDA FoodData Central (volné dílo).",
-    "backLink": "Zpět na suroviny"
+    "backLink": "Zpět na suroviny",
+    "groupSubheading": "Všechny varianty této potraviny podle USDA.",
+    "variantsLabel": "{count, plural, one {# varianta} few {# varianty} many {# varianty} other {# variantů}}"
   },
   "Products": {
     "heading": "Produkty (Česko)",
@@ -83,7 +85,9 @@
     "listTypeLabel": "Seznam",
     "addGroupHeading": "Vyloučit/povolit celou skupinu potravin",
     "groupLabel": "Skupina potravin",
-    "addItemHeading": "Vyloučit/povolit konkrétní surovinu nebo produkt",
+    "addFoodHeading": "Vyloučit/povolit konkrétní potravinu (zahrnuje všechny varianty)",
+    "foodLabel": "Potravina",
+    "addItemHeading": "Vyloučit/povolit jednu konkrétní variantu suroviny nebo produkt",
     "itemLabel": "Surovina nebo produkt",
     "itemSearchPlaceholder": "Hledat podle názvu...",
     "changeButton": "Změnit",
@@ -95,6 +99,7 @@
     "errors": {
       "invalidListType": "Vyberte černou nebo bílou listinu.",
       "groupRequired": "Vyberte skupinu potravin.",
+      "foodRequired": "Vyberte potravinu.",
       "itemRequired": "Nejprve vyhledejte a vyberte surovinu nebo produkt.",
       "unknown": "Něco se pokazilo. Zkuste to prosím znovu."
     }

@@ -19,11 +19,17 @@ export type ComplianceComponent = {
   // match this component — see HANDOVER D13 for why group rules are
   // ingredient-only for now.
   ingredientFoodGroupId: string | null;
+  // The ingredient's IngredientGroup id (e.g. "Chicken" — every USDA
+  // chicken cut, see HANDOVER D18), a different, finer-grained axis from
+  // ingredientFoodGroupId above. Same ingredient-only limitation as that
+  // field, for the same reason (products have no group in this schema).
+  ingredientGroupId: string | null;
 };
 
 export type ComplianceRule = {
   listType: "BLACKLIST" | "WHITELIST";
   foodGroupId: string | null;
+  ingredientGroupId: string | null;
   ingredientId: string | null;
   productId: string | null;
   preparation: string | null;
@@ -62,6 +68,12 @@ export function componentMatchesRule(
   if (rule.foodGroupId) {
     if (!component.ingredientFoodGroupId) return false;
     return isInGroupOrDescendant(component.ingredientFoodGroupId, rule.foodGroupId, groups);
+  }
+
+  if (rule.ingredientGroupId) {
+    if (component.ingredientGroupId !== rule.ingredientGroupId) return false;
+    if (!rule.preparation) return true;
+    return mealText.includes(rule.preparation.toLowerCase());
   }
 
   const idMatches =

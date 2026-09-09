@@ -8,6 +8,17 @@ const groupRuleSchema = z.object({
   foodGroupId: z.string().min(1, { message: "groupRequired" }),
 });
 
+// Targets a whole IngredientGroup (e.g. "Chicken" — every USDA chicken cut,
+// see HANDOVER D18), optionally narrowed to one named preparation the same
+// way an item rule can be — "any chicken, fried" rather than "this one exact
+// cut, fried".
+const foodRuleSchema = z.object({
+  targetType: z.literal("food"),
+  listType,
+  ingredientGroupId: z.string().min(1, { message: "foodRequired" }),
+  preparation: z.string().trim().max(100).optional(),
+});
+
 const itemRuleSchema = z.object({
   targetType: z.literal("item"),
   listType,
@@ -18,5 +29,6 @@ const itemRuleSchema = z.object({
 
 export const exclusionRuleSchema = z.discriminatedUnion("targetType", [
   groupRuleSchema,
+  foodRuleSchema,
   itemRuleSchema,
 ]);

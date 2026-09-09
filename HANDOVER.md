@@ -12,18 +12,24 @@ pending explicit Owner sign-off (per OPERATIONS.md's definition of done),
 even though the engineering work is complete and now actually running in
 production.
 
+Two post-deploy fixes (D17, 2026-09-06; D18, 2026-09-09) are committed
+locally but not yet pushed or deployed — the live site still runs the
+pre-fix search combobox and the old flat ingredient list until the Owner
+asks for a redeploy.
+
 Working end to end: Next.js app scaffold, Prisma schema + migration,
-email/password auth, cs/en i18n, a starter ingredient/product database
-(2,413 USDA ingredients, 493 Czech Open Food Facts products), a meal
-admin (`/admin/meals`, compose from ingredients/products, tags, steps,
-safety note) plus public meal browse/detail pages, user profiles with
-black/white exclusion lists (`/profile`), meal generation
-(`/meals/generate`) that respects those rules, and a real Terms of
-Use/Privacy page (`/about`) with the Owner's confirmed identity/contact.
-Test coverage: 29 Vitest unit tests (pure business logic — nutrition
-totals, allergen/gluten/lactose inference, exclusion compliance) and a
-first Playwright e2e suite (a real cross-account core flow, plus a
-mobile-viewport regression check).
+email/password auth, cs/en i18n, an ingredient/product database (2,413
+USDA ingredients — now grouped into a 2-level variant tree, see D18 — 493
+Czech Open Food Facts products), a meal admin (`/admin/meals`, compose
+from ingredients/products, tags, steps, safety note) plus public meal
+browse/detail pages, user profiles with black/white exclusion lists
+(`/profile`, now at three granularities — group/specific-food/exact-item,
+see D18), meal generation (`/meals/generate`) that respects those rules,
+and a real Terms of Use/Privacy page (`/about`) with the Owner's confirmed
+identity/contact. Test coverage: 41 Vitest unit tests (pure business
+logic — nutrition totals, allergen/gluten/lactose inference, exclusion
+compliance, ingredient grouping/slugify) and a first Playwright e2e suite
+(a real cross-account core flow, plus a mobile-viewport regression check).
 
 The `meals` table is intentionally empty — see D11 — waiting on the
 Owner to populate it through `/admin/meals`; every milestone that needed
@@ -314,6 +320,131 @@ database afterward — the real admin account is the Owner's own to create
 by registering `info@julienika.cz` with a password of their choosing;
 JulAI never invents or sees that password.
 
+**D17 — Fixed the ingredient/product search combobox's two real UX bugs,
+2026-09-06 (Owner-reported).** The meal composer (`/admin/meals/new` and
+`/edit`) and the profile exclusion-rule form (`/profile`) each had their
+own copy-pasted search-and-select widget, and both shipped with the same
+two bugs: clicking a result gave no feedback (the query text and dropdown
+just sat there unchanged, so a click looked identical to a no-op), and the
+dropdown never closed when focus moved away from the input. Fixed by
+extracting a shared `SearchCombobox` component
+(`src/components/search-combobox.tsx`) that clears the query and closes
+the dropdown on select, and closes on blur (checking the blur event's
+`relatedTarget` against the container so a result's own click isn't
+swallowed by the blur firing first) — then switched both call sites
+(`component-picker.tsx`, `item-rule-form.tsx`) to use it instead of their
+own duplicated logic. Only the meal composer was reported, but the
+identical bug existed verbatim in the profile form, so both were fixed
+together per the Company's "holistic changes, not patches" standard.
+Verified live in a real browser (not just the automated suite): registered
+a throwaway admin account, opened `/admin/meals/new`, confirmed selecting
+an ingredient result now visibly clears the search box and adds the item
+to "Selected components", and confirmed opening the products dropdown
+then clicking a *different* field closes it without selecting anything.
+Test account deleted afterward, `ADMIN_EMAIL` reverted to blank. `tsc`,
+`eslint`, full Vitest suite (29/29), and the full Playwright e2e suite
+(9/9, including the core-flow spec that exercises this exact widget) all
+clean. Committed locally (`d22d597`); **not pushed to GitHub and not
+deployed to production** — the Owner asked for the bug fixed, not a
+redeploy, so the live site at arfid.julienika.cz still runs the old
+(buggy) widget until the Owner asks for that separately.
+
+**D18 — Rebuilt the flat ingredient list into a 2-level variant tree, and
+extended exclusion rules to match, 2026-09-09 (Owner-reported: "I had
+troubles to find just an egg... did not find a normal milk").** Confirmed
+the cause first rather than assuming: `/ingredients` searching "milk"
+returned 122 substring matches with no structure, and "egg" mixed 20 real
+egg variants in with Eggnog/Eggplant/scrambled-Eggs — a direct consequence
+of M2's import (`scripts/import-ingredients.ts`) keeping every raw/generic
+USDA SR Legacy row as its own flat `Ingredient`, with no relationship
+between e.g. "Egg, whole, raw, fresh" and "Egg, yolk, raw, fresh" beyond
+both containing "egg".
+
+The fix leans on a real property of the source data instead of inventing
+one: USDA's own descriptions are already comma-structured by specificity
+("Milk, dry, nonfat, instant" = Milk → dry → nonfat → instant), so a
+group name is just an ingredient's first comma segment — reproducible,
+not hand-curated, same spirit as D8's "real, principled, reproducible
+subset" philosophy. New pure module `src/lib/ingredient-grouping.ts`
+(`deriveIngredientGroupName`, `computeIngredientGroups` — unit-tested)
+does the derivation; a new `IngredientGroup` model (`prisma/schema.prisma`)
+stores it, with `Ingredient.ingredientGroupId` pointing in. A group is
+only created when 2+ ingredients actually share one — a name with no real
+variants stays ungrouped rather than becoming a meaningless group of one.
+`scripts/import-ingredients.ts`'s new `assignIngredientGroups()` step
+recomputes this from every ingredient in the table on each run (idempotent
+— upserts by slug via the new `src/lib/slugify.ts`, reconciles membership
+changes), so it stays correct on repeat imports without needing a
+separate migration script. Run against the real dataset: **179 groups
+covering 2,079 of 2,413 ingredients** (2 fewer than the 181 raw
+name-groups computed — "Salad dressing"/"Salad Dressing" and "Soymilk
+(All flavors)"/"Soymilk (all flavors)" are the same food with
+inconsistent capitalization in USDA's own data, and correctly merged via
+slug collision rather than staying as spurious near-duplicate groups; not
+"fixed" further since the merge is exactly the right outcome).
+
+`src/lib/nutrition-queries.ts` keeps `searchIngredients()` (flat, used by
+the search-as-you-type pickers where the caller needs to land on one exact
+variant) and adds `browseIngredients()` for `/ingredients` itself: buckets
+matching ingredients by group, rendering a group as one row (e.g. "Milk —
+44 variants") only when 2+ of its members are in the current result set —
+a single matching member still renders as a normal standalone row. Clicking
+a group goes to a new `/ingredients/groups/[id]` page with its own search
+box (`searchIngredientGroupMembers`), which is what actually solves large
+groups like "Beef" (406 variants) or "Milk" (44) — an inline expand would
+just move the same wall-of-text problem down one level; a dedicated
+searchable page doesn't. Verified live: searching "milk" now shows a clean
+"Milk — 44 variants" row separated from unrelated "Milk substitutes"/"Milk
+shakes"/etc.; drilling into the group and searching "whole" narrows 44
+variants to the 6 relevant ones, landing directly on the "Milk, whole,
+3.25% milkfat" entry the Owner couldn't find. Czech pluralization for the
+new `variantsLabel` message uses real ICU plural categories (one/few/many
+vs. other), verified live: "3 varianty" (few) vs. "44 variantů" (other).
+
+**Scope, confirmed with the Owner via AskUserQuestion**: also extend
+exclusion rules with a third granularity — "a specific food, any variant"
+(e.g. blacklist "Chicken" once instead of ~15 separate raw cuts) — rather
+than leaving this as a browse-only fix. This closes a real, pre-existing
+gap in G-001 acceptance criterion 4's "specific food" tier: before this,
+there was no way to target more than one exact USDA variant at a time, so
+"exclude chicken" in practice meant either the much-too-broad "Poultry"
+`FoodGroup` or manually blacklisting every individual cut. `ExclusionRule`
+gains `ingredientGroupId` (+ its existing optional `preparation`
+qualifier, so "any chicken, fried" is expressible the same way "this one
+exact cut, fried" already was); `exclusion-validation.ts` gains a third
+`targetType: "food"` branch in the discriminated union; a new
+`FoodRuleForm` (`src/components/profile/food-rule-form.tsx`) is a plain
+server-rendered `<select>` over `listIngredientGroups()` (~180 groups,
+small and slow-changing — no search-as-you-type needed, same reasoning as
+`GroupRuleForm`'s `FoodGroup` dropdown) added to `/profile` between the
+existing whole-group and exact-item forms. `meal-compliance.ts` (pure,
+unit-tested) gets a parallel `ingredientGroupId` field on both
+`ComplianceComponent` and `ComplianceRule`, checked before the exact-id
+branch — same ingredient-only limitation as the existing `foodGroupId`
+check (Product-tier components have no group in this schema, per D13),
+now documented identically for this new field rather than being a fresh
+undocumented gap.
+
+Verified end to end with real throwaway data, same create-verify-delete
+pattern as M3/M5 (not left in the database): a real test profile
+blacklisting "Chicken, fried" (via the actual `/profile` UI, selecting the
+new food picker) correctly excluded a real "Fried chicken thighs" meal
+from `/meals/generate` while leaving "Grilled chicken breast" (a
+*different* chicken variant, no "fried" in its text) and "Beef stew"
+compliant — "2 of 3 meals... fit your list", confirmed live, proving the
+group match and the free-text preparation qualifier compose correctly
+rather than either over- or under-matching. Caught and fixed one real
+regression along the way: adding this third `/profile` form shifted
+`tests/e2e/core-flow.spec.ts`'s `.getByRole("button", { name: "Add rule"
+}).nth(1)` (previously the exact-item form's submit button, now the new
+food form's) — updated to `.nth(2)`. 12 new Vitest unit tests (`slugify`:
+3, `ingredient-grouping`: 5, 4 new `meal-compliance` cases for the group
+tier), 41/41 total; `tsc`/`eslint`/`next build` clean; 9/9 Playwright green
+including the fixed regression. **Committed locally; not pushed to GitHub
+and not deployed** — same standing gap as D17: the live site still serves
+the old flat ingredient list and the old two-granularity exclusion form
+until the Owner asks for a redeploy.
+
 ## How things fit together
 
 **Schema** (`prisma/schema.prisma`): two parallel nutrition sources feed
@@ -324,12 +455,17 @@ Product (Open Food Facts, CZ)   ─┼─> MealComponent (qty) -> Meal
 ```
 `FoodGroup` is a self-referential tree (`meat -> poultry -> chicken`) that
 both `Ingredient` and `ExclusionRule` point into, so a rule can target any
-level of the tree. `ExclusionRule` is the single table backing both
-black- and white-lists (`ExclusionListType`) at all three granularities
-described in G-001: group-only, ingredient/product-only, or
-ingredient/product + free-text `preparation`. `Allergen` is a controlled
-vocabulary (not free text) joined to both `Ingredient` and `Product`
-independently, since the same allergen can appear on either tier.
+level of the tree. `IngredientGroup` (see D18) is a second, unrelated
+grouping axis: a flat (not self-referential) cluster of an `Ingredient`'s
+real USDA variants under the specific food they are (e.g. "Milk"), derived
+from the name itself rather than the `FoodGroup` taxonomy. `ExclusionRule`
+is the single table backing both black- and white-lists
+(`ExclusionListType`) at all four granularities now in G-001: whole
+`FoodGroup`, whole `IngredientGroup` (+ optional `preparation`), or an
+exact `ingredient`/`product` (+ optional `preparation`). `Allergen` is a
+controlled vocabulary (not free text) joined to both `Ingredient` and
+`Product` independently, since the same allergen can appear on either
+tier.
 
 **Auth**: `src/auth.ts` (Credentials provider, `PrismaAdapter`, JWT
 sessions) + `src/lib/auth-actions.ts` (the actual register/login/logout
@@ -350,15 +486,21 @@ translations never break.
 **Data import** (`scripts/`): `seed-taxonomy.ts` must run first (creates
 the Allergen and FoodGroup rows the other two scripts look up by slug and
 fail loudly without). `import-ingredients.ts` downloads/caches USDA SR
-Legacy into `.data/fdc/` then upserts by `fdcId`. `import-products.ts`
-paginates the Open Food Facts search API (rate-limited, see D10) and
-upserts by `barcode`. Both are plain `tsx` scripts run via npm scripts,
-not Next.js API routes — they're one-off/occasional data operations, not
-app runtime behavior. Browse/search (`src/lib/nutrition-queries.ts` →
-`/ingredients`, `/products` and their `[id]` detail pages) is a thin
-read-only layer over the same Prisma models; `src/components/nutrition/*`
-holds the shared nutrition-facts table, allergen badge list, and search
-form used by both tiers' pages.
+Legacy into `.data/fdc/`, upserts by `fdcId`, then (since D18) recomputes
+the `IngredientGroup` tree via `assignIngredientGroups()` — pure logic in
+`src/lib/ingredient-grouping.ts`, idempotent, safe to re-run.
+`import-products.ts` paginates the Open Food Facts search API
+(rate-limited, see D10) and upserts by `barcode`. All are plain `tsx`
+scripts run via npm scripts, not Next.js API routes — they're
+one-off/occasional data operations, not app runtime behavior. Browse/
+search (`src/lib/nutrition-queries.ts`) has two layers now: `searchIngredients`
+(flat, unchanged, used by the search-as-you-type pickers) and
+`browseIngredients`/`getIngredientGroup`/`searchIngredientGroupMembers`
+(the grouped tree, used by `/ingredients` and the new
+`/ingredients/groups/[id]`) — `/products` and both tiers' `[id]` detail
+pages are otherwise unchanged, a thin read-only layer over the same Prisma
+models. `src/components/nutrition/*` holds the shared nutrition-facts
+table, allergen badge list, and search form used by both tiers' pages.
 
 **Meal admin & browse**: `src/lib/meal-nutrition.ts` (pure —
 `computeMealTotals`, unit-tested) → `src/lib/meal-queries.ts` (Prisma
@@ -378,34 +520,40 @@ delete-and-recreate the whole list rather than diffing, which is fine at
 this scale and keeps the action simple.
 
 **Profiles & exclusion rules**: `src/lib/exclusion-validation.ts` (a zod
-discriminated union on `targetType: "group" | "item"`) →
-`src/lib/exclusion-actions.ts` (`addExclusionRuleAction`,
+discriminated union, now `targetType: "group" | "food" | "item"` — see
+D18) → `src/lib/exclusion-actions.ts` (`addExclusionRuleAction`,
 `removeExclusionRuleAction` — the latter deletes scoped to
 `profile: { userId: session.user.id }`, so ownership is enforced by the
 query shape itself, not a separate check) → `src/lib/profile-queries.ts`
 (reads) → `/profile` page + `src/components/profile/group-rule-form.tsx`
-(server-rendered `<select>`, no client JS needed) +
-`item-rule-form.tsx` (client, reuses the same debounced-search pattern as
-`component-picker.tsx` but single-select). `registerAction` now creates
-a `UserProfile` alongside the `User` row so every account has one from
-the start; `requireProfileId()` in `exclusion-actions.ts` upserts one
-defensively for any account that predates this (there shouldn't be any
-in practice, but costs nothing to be safe).
+(`FoodGroup` dropdown, server-rendered `<select>`, no client JS needed) +
+`food-rule-form.tsx` (same pattern, an `IngredientGroup` dropdown +
+optional preparation text — see D18) + `item-rule-form.tsx` (client,
+reuses the same debounced-search pattern as `component-picker.tsx` but
+single-select), in that order on the page: broadest target first,
+narrowest last. `registerAction` now creates a `UserProfile` alongside the
+`User` row so every account has one from the start; `requireProfileId()`
+in `exclusion-actions.ts` upserts one defensively for any account that
+predates this (there shouldn't be any in practice, but costs nothing to
+be safe).
 
 **Meal generation**: `src/lib/meal-compliance.ts` (pure — `isMealCompliant`,
 `componentMatchesRule`, `isInGroupOrDescendant`, unit-tested) is the
-safety-facing core. `src/lib/generation-queries.ts` fetches candidate
-meals (optionally filtered by type/effort tag), maps each into the plain
-shape `meal-compliance.ts` expects, filters by the caller's exclusion
-rules, computes nutrition totals for the survivors via the same
-`computeMealTotals` M3 already built, and picks one at random — the
-random pick lives here rather than in the page component specifically
-because calling `Math.random()` inside a Server Component's render body
-trips `react-hooks/purity`. `/meals/generate` is a thin presentation
-layer over that: reads `type`/`effort` from `searchParams`, renders the
-filter form (plain GET, no client JS needed), and shows the picked meal
-or one of two distinct empty-state messages (no candidates at all vs.
-candidates but none compliant).
+safety-facing core; `componentMatchesRule` now checks `foodGroupId`, then
+`ingredientGroupId` (see D18), then falls through to the exact
+ingredient/product id + preparation check. `src/lib/generation-queries.ts`
+fetches candidate meals (optionally filtered by type/effort tag), maps
+each into the plain shape `meal-compliance.ts` expects (now including
+`ingredientGroupId`), filters by the caller's exclusion rules, computes
+nutrition totals for the survivors via the same `computeMealTotals` M3
+already built, and picks one at random — the random pick lives here
+rather than in the page component specifically because calling
+`Math.random()` inside a Server Component's render body trips
+`react-hooks/purity`. `/meals/generate` is a thin presentation layer over
+that: reads `type`/`effort` from `searchParams`, renders the filter form
+(plain GET, no client JS needed), and shows the picked meal or one of two
+distinct empty-state messages (no candidates at all vs. candidates but
+none compliant).
 
 **Legal doc & testing**: `docs/legal/about-terms-privacy.md` (markdown,
 source of truth) → `src/lib/legal.ts` (`legalDocHtml()`, reads the file
@@ -437,10 +585,21 @@ across repeated runs.
   "balanced," or did the Owner want an actual nutrition-target scoring
   system? Worth confirming explicitly rather than assuming the narrower
   reading is final.
-- Open (D13): group-based exclusion rules don't yet cover Product-tier
-  components (no `foodGroupId` on `Product`) — revisit if this turns out
-  to matter once real meals include branded products in group-relevant
-  categories (e.g. a packaged meat product).
+- Open (D13, and now D18 too): group-based exclusion rules don't yet cover
+  Product-tier components (no `foodGroupId`/`ingredientGroupId` on
+  `Product`) — revisit if this turns out to matter once real meals include
+  branded products in group-relevant categories (e.g. a packaged meat
+  product).
+- Open: two ingredient/exclusion-rule improvements (D17's search-combobox
+  fix, D18's variant tree + specific-food exclusion tier) are committed
+  locally but not deployed — the live site at arfid.julienika.cz still
+  runs the old flat ingredient list and two-granularity exclusion form
+  until the Owner asks for a redeploy.
+- Open (D18): the variant tree is a flat 2-level grouping (first comma
+  segment only) — good enough to fix the reported problem, but a huge
+  group like "Beef" (406 variants) still relies entirely on its own
+  search box rather than further subdivision. Revisit if that turns out
+  to still be unwieldy in practice.
 - Open (D14): finalize the operator's business registration address and
   any minimum-age policy before a real deploy — both are placeholders by
   design, not oversights.

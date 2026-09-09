@@ -18,13 +18,20 @@ const GROUPS: FoodGroupNode[] = [
 ];
 
 function component(overrides: Partial<ComplianceComponent> = {}): ComplianceComponent {
-  return { ingredientId: null, productId: null, ingredientFoodGroupId: null, ...overrides };
+  return {
+    ingredientId: null,
+    productId: null,
+    ingredientFoodGroupId: null,
+    ingredientGroupId: null,
+    ...overrides,
+  };
 }
 
 function rule(overrides: Partial<ComplianceRule> = {}): ComplianceRule {
   return {
     listType: "BLACKLIST",
     foodGroupId: null,
+    ingredientGroupId: null,
     ingredientId: null,
     productId: null,
     preparation: null,
@@ -82,6 +89,31 @@ describe("componentMatchesRule", () => {
     expect(componentMatchesRule(yogurt, rule({ productId: "yogurt-1" }), "", GROUPS)).toBe(true);
     expect(componentMatchesRule(yogurt, rule({ productId: "yogurt-2" }), "", GROUPS)).toBe(false);
   });
+
+  it("matches an ingredient-group rule against any variant in that group", () => {
+    const chickenBreast = component({ ingredientId: "chicken-breast", ingredientGroupId: "chicken" });
+    const chickenThigh = component({ ingredientId: "chicken-thigh", ingredientGroupId: "chicken" });
+    const beef = component({ ingredientId: "beef-1", ingredientGroupId: "beef" });
+    const r = rule({ ingredientGroupId: "chicken" });
+    expect(componentMatchesRule(chickenBreast, r, "", GROUPS)).toBe(true);
+    expect(componentMatchesRule(chickenThigh, r, "", GROUPS)).toBe(true);
+    expect(componentMatchesRule(beef, r, "", GROUPS)).toBe(false);
+  });
+
+  it("does not match an ingredient-group rule against an ungrouped ingredient or a product", () => {
+    const ungrouped = component({ ingredientId: "eggplant" });
+    const product = component({ productId: "some-product" });
+    const r = rule({ ingredientGroupId: "chicken" });
+    expect(componentMatchesRule(ungrouped, r, "", GROUPS)).toBe(false);
+    expect(componentMatchesRule(product, r, "", GROUPS)).toBe(false);
+  });
+
+  it("only matches a preparation-qualified ingredient-group rule when the meal text names it", () => {
+    const chickenThigh = component({ ingredientId: "chicken-thigh", ingredientGroupId: "chicken" });
+    const r = rule({ ingredientGroupId: "chicken", preparation: "fried" });
+    expect(componentMatchesRule(chickenThigh, r, "fried chicken thighs", GROUPS)).toBe(true);
+    expect(componentMatchesRule(chickenThigh, r, "grilled chicken thighs", GROUPS)).toBe(false);
+  });
 });
 
 describe("isMealCompliant", () => {
@@ -96,6 +128,14 @@ describe("isMealCompliant", () => {
       components: [component({ ingredientId: "chicken", ingredientFoodGroupId: "poultry" })],
     };
     expect(isMealCompliant(meal, [rule({ foodGroupId: "meat" })], GROUPS)).toBe(false);
+  });
+
+  it("excludes a meal via an ingredient-group rule regardless of which variant was used", () => {
+    const meal: ComplianceMeal = {
+      mealText: "chicken thighs and rice",
+      components: [component({ ingredientId: "chicken-thigh", ingredientGroupId: "chicken" })],
+    };
+    expect(isMealCompliant(meal, [rule({ ingredientGroupId: "chicken" })], GROUPS)).toBe(false);
   });
 
   it("allows a meal whose group is unrelated to the blacklist", () => {

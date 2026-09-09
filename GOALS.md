@@ -251,8 +251,64 @@ live in `E:\CLAUDE\COMPANY\GOALS.md`.
       the exclusion-filtering/meal-generation tests this milestone asked
       for). Full suite green: 29 Vitest + 9 Playwright; `tsc`/`eslint`/
       `next build` clean.
+- [x] M7 — Ingredient variant tree (post-deploy, Owner-reported): rebuild
+      the flat 2,413-row ingredient table into a browsable/searchable
+      2-level tree (a real food e.g. "Milk" grouping every USDA variant of
+      it), and extend exclusion rules to target a whole such food, not
+      just one exact variant. ✔ 2026-09-09. See HANDOVER D18 for the full
+      design and verification record.
 
 **Progress log** (newest first; The Company appends at every stopping point):
+- 2026-09-09 — **M7 done and verified — ingredient variant tree
+  (Owner-reported: "I had troubles to find just an egg... did not find a
+  normal milk").** Confirmed the real cause first (queried the live dev
+  DB: searching "milk" returned 122 substring matches / 44 rows named
+  "Milk, ...", sorted alphabetically with no structure). Rebuilt: a new
+  `IngredientGroup` model clusters an ingredient's real USDA variants
+  under the specific food they all are, derived automatically from each
+  name's first comma segment (USDA's own naming convention already
+  encodes "food, descriptor, descriptor, ..." — a real, reproducible
+  property of the data, not hand-curated). Re-running `import:ingredients`
+  produced 179 real groups covering 2,079 of 2,413 ingredients (2 fewer
+  than the 181 computed name-groups — "Salad dressing"/"Salad Dressing"
+  and "Soymilk (All flavors)"/"Soymilk (all flavors)" collided on slug and
+  correctly merged). `/ingredients` now shows a group (e.g. "Milk — 44
+  variants") instead of 44 flat rows, linking to a new
+  `/ingredients/groups/[id]` page with its own search box — verified live:
+  searching "milk" surfaces the "Milk" group cleanly separated from
+  "Milk substitutes"/"Milk shakes"/etc.; drilling in and searching "whole"
+  narrows 44 variants to the 6 relevant ones, including the exact "Milk,
+  whole, 3.25% milkfat" the Owner couldn't find. Per Owner's explicit
+  scope answer (AskUserQuestion), also extended exclusion rules with a
+  third granularity — "specific food, any variant" (e.g. blacklist
+  "Chicken" once instead of ~15 separate cuts) — closing a real gap in
+  G-001 AC4's "specific food" tier, which previously had no way to target
+  more than one exact USDA variant at a time. Verified end to end with
+  real throwaway data (created, tested, deleted — same pattern as M3/M5):
+  a test profile blacklisting "Chicken, fried" correctly excluded a real
+  "Fried chicken thighs" meal from generation while leaving a "Grilled
+  chicken breast" meal and a "Beef stew" meal compliant (2 of 3), proving
+  both the group match and the preparation-text qualifier work together
+  correctly. Caught and fixed a real e2e regression along the way: adding
+  a third exclusion-rule form on `/profile` shifted `core-flow.spec.ts`'s
+  `.nth(1)` button index (now `.nth(2)`). 12 new Vitest unit tests
+  (`slugify`: 3, `ingredient-grouping`: 5, 4 new `meal-compliance` cases),
+  41/41 total; `tsc`/`eslint`/`next build` clean; 9/9 Playwright. See
+  HANDOVER D18 for the full design record. **Not pushed to GitHub or
+  deployed** — the live site at arfid.julienika.cz still runs the flat
+  ingredient list until the Owner asks for a redeploy (same standing gap
+  as D17's fix).
+- 2026-09-06 — **Bug fix, Owner-reported: ingredient/product search
+  combobox had no click feedback and didn't close on blur.** Fixed by
+  extracting a shared `SearchCombobox` component and switching both the
+  meal composer and the profile exclusion-rule form to it (the second
+  form had the identical latent bug, fixed proactively — see HANDOVER
+  D17). Verified live in a real browser: selecting a result now clears
+  the query and shows up in "Selected components"; clicking away closes
+  the dropdown without selecting. `tsc`/`eslint` clean, 29/29 Vitest,
+  9/9 Playwright. Committed locally (`d22d597`) — **not pushed to GitHub,
+  not deployed**; the live site still runs the pre-fix widget until the
+  Owner asks for a redeploy.
 - 2026-09-06 — **Deployed to production, Owner-directed ("Deploy it to
   arfid.julienika.cz").** Live at https://arfid.julienika.cz — see
   HANDOVER D16 for the full record (GitHub push, server clone, `.env`,

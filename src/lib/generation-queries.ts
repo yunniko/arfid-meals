@@ -53,6 +53,7 @@ export async function generateCompliantMeals(
   const rules: ComplianceRule[] = (profile?.exclusionRules ?? []).map((r) => ({
     listType: r.listType,
     foodGroupId: r.foodGroupId,
+    ingredientGroupId: r.ingredientGroupId,
     ingredientId: r.ingredientId,
     productId: r.productId,
     preparation: r.preparation,
@@ -65,6 +66,7 @@ export async function generateCompliantMeals(
         ingredientId: c.ingredientId,
         productId: c.productId,
         ingredientFoodGroupId: c.ingredient?.foodGroupId ?? null,
+        ingredientGroupId: c.ingredient?.ingredientGroupId ?? null,
       })),
     };
     return isMealCompliant(complianceMeal, rules, groups);

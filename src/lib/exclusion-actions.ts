@@ -36,13 +36,20 @@ export async function addExclusionRuleAction(
           listType: formData.get("listType"),
           foodGroupId: formData.get("foodGroupId"),
         }
-      : {
-          targetType: "item" as const,
-          listType: formData.get("listType"),
-          kind: formData.get("kind"),
-          itemId: formData.get("itemId"),
-          preparation: formData.get("preparation") || undefined,
-        };
+      : targetType === "food"
+        ? {
+            targetType: "food" as const,
+            listType: formData.get("listType"),
+            ingredientGroupId: formData.get("ingredientGroupId"),
+            preparation: formData.get("preparation") || undefined,
+          }
+        : {
+            targetType: "item" as const,
+            listType: formData.get("listType"),
+            kind: formData.get("kind"),
+            itemId: formData.get("itemId"),
+            preparation: formData.get("preparation") || undefined,
+          };
 
   const parsed = exclusionRuleSchema.safeParse(raw);
   if (!parsed.success) {
@@ -55,6 +62,15 @@ export async function addExclusionRuleAction(
         profileId,
         listType: parsed.data.listType,
         foodGroupId: parsed.data.foodGroupId,
+      },
+    });
+  } else if (parsed.data.targetType === "food") {
+    await prisma.exclusionRule.create({
+      data: {
+        profileId,
+        listType: parsed.data.listType,
+        ingredientGroupId: parsed.data.ingredientGroupId,
+        preparation: parsed.data.preparation || null,
       },
     });
   } else {

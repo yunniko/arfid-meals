@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { searchIngredients } from "@/lib/nutrition-queries";
+import { browseIngredients } from "@/lib/nutrition-queries";
 import { SearchForm } from "@/components/nutrition/search-form";
 
 export default async function IngredientsPage({
@@ -13,7 +13,7 @@ export default async function IngredientsPage({
     getTranslations("Ingredients"),
     getTranslations("Nutrition"),
   ]);
-  const ingredients = await searchIngredients(q);
+  const entries = await browseIngredients(q);
 
   return (
     <main className="flex-1 p-6 md:p-10">
@@ -29,28 +29,42 @@ export default async function IngredientsPage({
           />
         </div>
         <ul className="mt-6 divide-y divide-black/10 dark:divide-white/10">
-          {ingredients.map((ingredient) => (
-            <li key={ingredient.id}>
-              <Link
-                href={`/ingredients/${ingredient.id}`}
-                className="flex items-center justify-between gap-4 py-3 hover:underline"
-              >
-                <span>
-                  {ingredient.name}
-                  {ingredient.foodGroup && (
-                    <span className="ml-2 text-xs text-black/50 dark:text-white/50">
-                      {ingredient.foodGroup.name}
-                    </span>
-                  )}
-                </span>
-                <span className="shrink-0 text-sm text-black/60 dark:text-white/60">
-                  {ingredient.kcal ?? tn("unknown")} {tn("kcal")}
-                </span>
-              </Link>
-            </li>
-          ))}
+          {entries.map((entry) =>
+            entry.kind === "group" ? (
+              <li key={`group-${entry.id}`}>
+                <Link
+                  href={`/ingredients/groups/${entry.id}${q ? `?q=${encodeURIComponent(q)}` : ""}`}
+                  className="flex items-center justify-between gap-4 py-3 hover:underline"
+                >
+                  <span className="font-medium">{entry.name}</span>
+                  <span className="shrink-0 text-sm text-black/60 dark:text-white/60">
+                    {t("variantsLabel", { count: entry.count })}
+                  </span>
+                </Link>
+              </li>
+            ) : (
+              <li key={entry.ingredient.id}>
+                <Link
+                  href={`/ingredients/${entry.ingredient.id}`}
+                  className="flex items-center justify-between gap-4 py-3 hover:underline"
+                >
+                  <span>
+                    {entry.ingredient.name}
+                    {entry.ingredient.foodGroup && (
+                      <span className="ml-2 text-xs text-black/50 dark:text-white/50">
+                        {entry.ingredient.foodGroup.name}
+                      </span>
+                    )}
+                  </span>
+                  <span className="shrink-0 text-sm text-black/60 dark:text-white/60">
+                    {entry.ingredient.kcal ?? tn("unknown")} {tn("kcal")}
+                  </span>
+                </Link>
+              </li>
+            ),
+          )}
         </ul>
-        {ingredients.length === 0 && (
+        {entries.length === 0 && (
           <p className="mt-6 text-sm text-black/60 dark:text-white/60">{tn("noResults")}</p>
         )}
       </div>
